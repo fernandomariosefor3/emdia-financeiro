@@ -4,7 +4,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { supabase } from "../lib/supabase";
+import { db } from "../lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const APP_URL = "https://app.emdiafinanceiro.com.br";
 const HERO_BG = "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1920&q=80&auto=format&fit=crop";
@@ -638,15 +639,13 @@ function Contact() {
     e.preventDefault();
     setStatus("loading");
     try {
-      if (!supabase) throw new Error("Supabase not configured");
-      const { error } = await supabase.from("contact_messages").insert([{
+      await addDoc(collection(db, "contact_messages"), {
         name: form.name,
         email: form.email,
         subject: form.subject,
         message: form.message,
         created_at: new Date().toISOString(),
-      }]);
-      if (error) throw error;
+      });
       setStatus("success");
       setForm({ name: "", email: "", subject: "", message: "" });
     } catch {
