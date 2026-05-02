@@ -47,6 +47,16 @@ function collectFiles(dir: string): Array<{ path: string; content: string }> {
   return results;
 }
 
+async function getLatestCommitSha(): Promise<string> {
+  const ref = await gh(`/repos/${OWNER}/${REPO}/git/refs/heads/main`) as { object: { sha: string } };
+  return ref.object.sha;
+}
+
+async function getTreeSha(commitSha: string): Promise<string> {
+  const commit = await gh(`/repos/${OWNER}/${REPO}/git/commits/${commitSha}`) as { tree: { sha: string } };
+  return commit.tree.sha;
+}
+
 async function run() {
   const user = await gh("/user") as { login: string };
   console.log(`👤 Usuário: ${user.login}`);
@@ -83,26 +93,12 @@ async function run() {
   }
   console.log(`📁 ${files.length} arquivos encontrados`);
 
-  console.log("📄 Inicializando repositório com README...");
-  const readmeContent = Buffer.from(
-    `# emdia — Controle Financeiro\n\nPlataforma de controle financeiro pessoal.\n\n## Firebase\n\nProjeto: \`emdiafinanceiro-13483\`\n\n## Deploy\n\n\`\`\`bash\nnpm install -g firebase-tools\nfirebase deploy\n\`\`\`\n`
-  ).toString("base64");
+  console.log("📦 Obtendo estado atual do repositório...");
+  const baseSha = await getLatestCommitSha();
+  const baseTreeSha = await getTreeSha(baseSha);
+  console.log(`   commit base: ${baseSha.slice(0, 7)}`);
 
-  await gh(`/repos/${OWNER}/${REPO}/contents/README.md`, "PUT", {
-    message: "chore: init repository",
-    content: readmeContent,
-  });
-  console.log("   README criado");
-
-  console.log("📦 Buscando SHA do commit inicial...");
-  const refData = await gh(`/repos/${OWNER}/${REPO}/git/refs/heads/main`) as { object: { sha: string } };
-  const baseSha = refData.object.sha;
-  console.log(`   base commit: ${baseSha}`);
-
-  const commitData = await gh(`/repos/${OWNER}/${REPO}/git/commits/${baseSha}`) as { tree: { sha: string } };
-  const baseTreeSha = commitData.tree.sha;
-
-  console.log("🌲 Criando tree completa...");
+  console.log("🌲 Criando nova tree...");
   const treeItems = files.map(f => ({
     path: f.path,
     mode: "100644",
@@ -114,15 +110,15 @@ async function run() {
     base_tree: baseTreeSha,
     tree: treeItems,
   }) as { sha: string };
-  console.log(`   tree: ${tree.sha}`);
+  console.log(`   tree: ${tree.sha.slice(0, 7)}`);
 
-  console.log("📝 Criando commit final...");
+  console.log("📝 Criando commit...");
   const commit = await gh(`/repos/${OWNER}/${REPO}/git/commits`, "POST", {
-    message: "feat: emdia financeiro — setup com Firebase e GitHub",
+    message: "feat: site emdia melhorado — design moderno, animações e Firebase",
     tree: tree.sha,
     parents: [baseSha],
   }) as { sha: string };
-  console.log(`   commit: ${commit.sha}`);
+  console.log(`   commit: ${commit.sha.slice(0, 7)}`);
 
   console.log("🔖 Atualizando branch main...");
   await gh(`/repos/${OWNER}/${REPO}/git/refs/heads/main`, "PATCH", {
@@ -130,7 +126,7 @@ async function run() {
     force: false,
   });
 
-  console.log(`\n✅ Código enviado com sucesso!`);
+  console.log(`\n✅ Código atualizado no GitHub!`);
   console.log(`🔗 https://github.com/${OWNER}/${REPO}`);
 }
 
