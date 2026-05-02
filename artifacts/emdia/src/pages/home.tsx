@@ -134,7 +134,7 @@ function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1AC87E] to-[#0fa85f] flex items-center justify-center text-white font-black text-sm">e</div>
+          <img src="/logo.jpg" alt="emdia" className="w-9 h-9 rounded-lg object-cover" />
           <span className={`font-bold text-xl ${scrolled ? "text-[#0A0F1E]" : "text-white"}`}>emdia</span>
         </a>
 
@@ -167,7 +167,7 @@ function Navbar() {
               <a key={l.label} href={l.href} onClick={() => setOpen(false)}
                 className="block py-3 text-gray-700 font-medium border-b border-gray-50 hover:text-[#1AC87E]">{l.label}</a>
             ))}
-            <a href={APP_URL} className="mt-4 block text-center py-3 rounded-xl bg-[#1AC87E] text-white font-bold">Acessar App</a>
+            <a href={APP_URL} className="mt-4 block text-center py-3 rounded-xl bg-[#1AC87E] text-white font-bold">Acessar App →</a>
           </motion.div>
         )}
       </AnimatePresence>
@@ -223,12 +223,10 @@ function Hero() {
           </a>
         </motion.div>
 
-        {/* Floating app icon */}
+        {/* Floating logo */}
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-12 w-16 h-16 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl animate-bounce">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1AC87E] to-[#0fa85f] flex items-center justify-center">
-            <span className="text-white font-black text-lg">e</span>
-          </div>
+          className="mt-12 w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 animate-bounce">
+          <img src="/logo.jpg" alt="emdia" className="w-full h-full object-cover" />
         </motion.div>
       </div>
 
@@ -795,7 +793,7 @@ function Footer() {
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1AC87E] to-[#0fa85f] flex items-center justify-center text-white font-black text-sm">e</div>
+              <img src="/logo.jpg" alt="emdia" className="w-8 h-8 rounded-lg object-cover" />
               <span className="font-bold text-xl text-white">emdia</span>
             </div>
             <p className="text-white/40 text-sm leading-relaxed">Controle financeiro pessoal simples, inteligente e seguro.</p>
