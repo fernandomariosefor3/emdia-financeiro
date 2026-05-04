@@ -7,7 +7,7 @@ import {
 import { db } from "../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-const APP_URL = "https://app.emdiafinanceiro.com.br";
+const APP_URL = "#contato";
 const HERO_BG = "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1920&q=80&auto=format&fit=crop";
 
 const fadeUp = {
