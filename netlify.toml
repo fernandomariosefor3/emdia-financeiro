@@ -7,3 +7,4 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--version"
   PORT = "3000"
+  BASE_PATH = "/"
