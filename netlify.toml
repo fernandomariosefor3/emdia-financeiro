@@ -1,0 +1,8 @@
+[build]
+  base = "artifacts/emdia"
+  command = "corepack enable && corepack prepare pnpm@latest --activate && pnpm install --no-frozen-lockfile && pnpm run build"
+  publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--version"
