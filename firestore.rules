@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cada usuário só acessa os próprios dados
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Mensagens de contato — qualquer um pode criar, admin pode ler
+    match /contact_messages/{docId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+    }
+  }
+}
