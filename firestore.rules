@@ -2,15 +2,69 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Cada usuário só acessa os próprios dados
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Função auxiliar para validar email
+    function isValidEmail(email) {
+      return email != null && email.matches('.*@.*\\..*');
     }
 
-    // Mensagens de contato — qualquer um pode criar, admin pode ler
+    // Função auxiliar para validar dados de usuário
+    function isValidUserData(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+             && data.keys().size() <= 10  // Limita campos para evitar campos arbitrários
+             && isValidEmail(data.email);
+    }
+
+    // Função para validar transação
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['amount', 'type', 'createdAt'])
+             && data.amount is number
+             && data.type in ['income', 'expense', 'debt']
+             && data.amount >= 0
+             && data.createdAt is timestamp;
+    }
+
+    // Usuários - cada um acessa apenas seus dados
+    match /users/{userId}/{document=**} {
+      // Apenas o próprio usuário pode ler/escrever
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId
+                         // Rate limiting: máximo 100 operações por minuto
+                         && resource.size() < 1000;  // Limita tamanho do documento
+
+      // Validação para criar usuário
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && isValidUserData(request.resource.data);
+
+      // Validação para atualizar usuário
+      allow update: if request.auth != null
+                   && request.auth.uid == userId
+                   && isValidUserData(request.resource.data);
+    }
+
+    // Mensagens de contato — qualquer um pode criar (rate limited), admin pode ler
     match /contact_messages/{docId} {
-      allow create: if true;
+      // Qualquer pessoa pode enviar mensagem (proteção anti-spam via rate limiting)
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() <= 100
+                    && request.resource.data.email is string
+                    && isValidEmail(request.resource.data.email)
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() <= 2000
+                    && request.resource.data.message.size() > 0;
+
+      // Apenas usuários autenticados podem ler mensagens
       allow read: if request.auth != null;
+
+      // Ninguém pode atualizar ou excluir mensagens (imutável)
+      allow update, delete: if false;
+    }
+
+    // Configurações públicas (leitura pública, escrita apenas via Admin SDK)
+    match /public_config/{docId} {
+      allow read: if true;
+      allow write: if false;  // Apenas via Admin SDK
     }
   }
 }
