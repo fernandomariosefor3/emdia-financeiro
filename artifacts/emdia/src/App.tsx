@@ -1,11 +1,13 @@
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { UserPlanProvider } from "@/lib/useUserPlan";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Cadastro from "@/pages/cadastro";
 import Dashboard from "@/pages/dashboard";
 import Transacoes from "@/pages/transacoes";
+import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
 import { Component, ReactNode } from "react";
 
@@ -110,6 +112,9 @@ function Router() {
       <Route path="/transacoes">
         <ProtectedRoute component={Transacoes} />
       </Route>
+      <Route path="/upgrade">
+        <ProtectedRoute component={Upgrade} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -120,9 +125,11 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
+          <UserPlanProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+          </UserPlanProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
