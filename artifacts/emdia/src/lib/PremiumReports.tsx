@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ProGate } from "./ProBadge";
+import { ProGate } from "./useUserPlan";
 import { UpgradeModal } from "./ProBadge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
