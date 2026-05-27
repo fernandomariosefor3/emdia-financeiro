@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /app/
+Disallow: /admin/
+Allow: /
+Sitemap: https://emdiafinanceiro.com.br/sitemap.xml
