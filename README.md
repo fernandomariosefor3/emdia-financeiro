@@ -7,13 +7,35 @@ Plataforma moderna de gestão financeira pessoal desenvolvida com React, TypeScr
 ![React](https://img.shields.io/badge/React-19.1-blue)
 ![Firebase](https://img.shields.io/badge/Firebase-12.12-orange)
 
+## Planos
+
+| Recurso                  | Gratuito       | Pro (R$6,58/mês) | Empresas      |
+|--------------------------|:--------------:|:----------------:|:-------------:|
+| Transações/mês           | 15             | Ilimitadas       | Ilimitadas    |
+| Categorias               | 5              | Ilimitadas       | Ilimitadas    |
+| Histórico                | 30 dias        | Completo         | Completo      |
+| Exportação CSV           | —              | ✓                | ✓             |
+| Relatórios mensais       | —              | ✓                | ✓             |
+| Sincronização na nuvem   | —              | ✓                | ✓             |
+| Backup histórico         | —              | ✓                | ✓             |
+| Multi-usuários           | —              | +1 familiar      | Até 5         |
+| Integração ERP           | —              | —                | ✓             |
+| SLA dedicado             | —              | —                | ✓             |
+| Suporte                  | E-mail         | Prioritário      | Dedicado      |
+| Preço anual              | Grátis         | R$78,99/ano      | Sob consulta  |
+
+> Plano Pro: 7 dias de garantia + cancelamento fácil a qualquer momento.
+
+---
+
 ## Funcionalidades
 
 - **Dashboard Financeiro** — Visualize suas receitas, despesas e dívidas em tempo real
-- **Gestão de Transações** — Registro rápido de entradas e saídas
+- **Gestão de Transações** — Registro rápido de entradas e saídas com limite por plano
 - **Gráficos Interativos** — Gráficos de pizza e barras para análise visual
-- **Autenticação Segura** — Login com Google via Firebase Auth
-- **Exportação CSV** — Exporte seus dados para declaração de IR
+- **Autenticação Segura** — Login com Firebase Auth (email/senha)
+- **Exportação CSV** — Exporte seus dados para declaração de IR (plano Pro)
+- **Relatórios Premium** — Análise por mês, trimestre e ano (plano Pro)
 - **Responsivo** — Funciona perfeitamente em desktop e mobile
 - **PWA** — Instale como app no seu celular
 

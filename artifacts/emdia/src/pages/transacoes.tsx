@@ -10,6 +10,9 @@ import {
   TrendingUp, ChevronLeft, Loader2, Search,
 } from "lucide-react";
 import { useTransactions } from "@/hooks/use-transactions";
+import { useUserPlan } from "@/lib/useUserPlan";
+import { TransactionUsage, UpgradeModal } from "@/lib/ProBadge";
+import { CSVExport } from "@/lib/PremiumReports";
 import { DEFAULT_CATEGORIES, type Transaction, type TransactionType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -156,8 +159,10 @@ function TransactionForm({
 export default function Transacoes() {
   const [, navigate] = useLocation();
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
+  const { canPerformAction } = useUserPlan();
 
   const [showDialog, setShowDialog] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [search, setSearch] = useState("");
@@ -185,6 +190,10 @@ export default function Transacoes() {
   }
 
   function openNew() {
+    if (!canPerformAction("addTransaction")) {
+      setShowLimitModal(true);
+      return;
+    }
     setEditing(null);
     setShowDialog(true);
   }
@@ -222,6 +231,20 @@ export default function Transacoes() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+        {/* Uso do plano + exportação CSV */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 bg-white border border-gray-100 shadow-sm rounded-xl p-4">
+            <TransactionUsage />
+          </div>
+          <div className="sm:w-80">
+            <CSVExport transactions={transactions.map(t => ({
+              ...t,
+              type: t.type as "income" | "expense" | "debt",
+              date: new Date(t.date),
+            }))} />
+          </div>
+        </div>
+
         {/* Summary */}
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-white border border-gray-100 shadow-sm">
@@ -331,6 +354,14 @@ export default function Transacoes() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Modal de limite de plano */}
+      <UpgradeModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        feature="unlimited"
+        description="Você atingiu o limite de transações do plano gratuito este mês."
+      />
 
       {/* Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) setEditing(null); }}>

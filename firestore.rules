@@ -2,69 +2,109 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Função auxiliar para validar email
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
     function isValidEmail(email) {
-      return email != null && email.matches('.*@.*\\..*');
+      return email is string && email.matches('.*@.*\\..*');
     }
 
-    // Função auxiliar para validar dados de usuário
+    function validPlan(plan) {
+      return plan in ['free', 'pro', 'enterprise'];
+    }
+
+    // Valida documento de usuário (criação e atualização)
     function isValidUserData(data) {
-      return data.keys().hasAll(['email', 'createdAt'])
-             && data.keys().size() <= 10  // Limita campos para evitar campos arbitrários
-             && isValidEmail(data.email);
+      let required = data.keys().hasAll(['email', 'createdAt']);
+      let emailOk  = isValidEmail(data.email);
+      let planOk   = !data.keys().hasAny(['plan']) || validPlan(data.plan);
+      let countOk  = !data.keys().hasAny(['transactionsThisMonth'])
+                     || (data.transactionsThisMonth is int && data.transactionsThisMonth >= 0);
+      let sizeOk   = data.keys().size() <= 15;
+      return required && emailOk && planOk && countOk && sizeOk;
     }
 
-    // Função para validar transação
+    // Valida documento de transação
     function isValidTransaction(data) {
-      return data.keys().hasAll(['amount', 'type', 'createdAt'])
-             && data.amount is number
-             && data.type in ['income', 'expense', 'debt']
-             && data.amount >= 0
-             && data.createdAt is timestamp;
+      let required    = data.keys().hasAll(['amount', 'type', 'category', 'description', 'date', 'createdAt']);
+      let amountOk    = data.amount is number && data.amount > 0 && data.amount < 1000000000;
+      let typeOk      = data.type in ['income', 'expense'];
+      let categoryOk  = data.category is string && data.category.size() > 0 && data.category.size() <= 100;
+      let descOk      = data.description is string && data.description.size() > 0 && data.description.size() <= 500;
+      let dateOk      = data.date is string && data.date.size() == 10; // yyyy-MM-dd
+      let sizeOk      = data.keys().size() <= 12;
+      return required && amountOk && typeOk && categoryOk && descOk && dateOk && sizeOk;
     }
 
-    // Usuários - cada um acessa apenas seus dados
-    match /users/{userId}/{document=**} {
-      // Apenas o próprio usuário pode ler/escrever
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId
-                         // Rate limiting: máximo 100 operações por minuto
-                         && resource.size() < 1000;  // Limita tamanho do documento
+    // ── Usuários ───────────────────────────────────────────────────────────────
 
-      // Validação para criar usuário
-      allow create: if request.auth != null
-                    && request.auth.uid == userId
-                    && isValidUserData(request.resource.data);
+    match /users/{userId} {
+      // Apenas o próprio usuário lê seus dados
+      allow read: if isOwner(userId);
 
-      // Validação para atualizar usuário
-      allow update: if request.auth != null
-                   && request.auth.uid == userId
-                   && isValidUserData(request.resource.data);
+      // Criação: valida dados obrigatórios
+      allow create: if isOwner(userId) && isValidUserData(request.resource.data);
+
+      // Atualização: valida dados e impede troca de plan sem webhook
+      // (plan só é atualizado via Firebase Admin SDK / Cloud Functions)
+      allow update: if isOwner(userId)
+                    && isValidUserData(request.resource.data)
+                    && (!request.resource.data.keys().hasAny(['plan'])
+                        || request.resource.data.plan == resource.data.plan);
+
+      // Nunca permite deletar pela SDK de cliente
+      allow delete: if false;
     }
 
-    // Mensagens de contato — qualquer um pode criar (rate limited), admin pode ler
+    // ── Transações (subcoleção) ────────────────────────────────────────────────
+
+    match /users/{userId}/transactions/{txId} {
+      // Apenas o dono lê suas transações
+      allow read: if isOwner(userId);
+
+      // Criação: valida campos da transação
+      allow create: if isOwner(userId) && isValidTransaction(request.resource.data);
+
+      // Atualização: valida e impede troca de createdAt
+      allow update: if isOwner(userId)
+                    && isValidTransaction(request.resource.data)
+                    && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Apenas o próprio usuário pode deletar
+      allow delete: if isOwner(userId);
+    }
+
+    // ── Mensagens de contato ───────────────────────────────────────────────────
+
     match /contact_messages/{docId} {
-      // Qualquer pessoa pode enviar mensagem (proteção anti-spam via rate limiting)
       allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message'])
                     && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
                     && request.resource.data.name.size() <= 100
-                    && request.resource.data.email is string
                     && isValidEmail(request.resource.data.email)
                     && request.resource.data.message is string
-                    && request.resource.data.message.size() <= 2000
-                    && request.resource.data.message.size() > 0;
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 2000;
 
-      // Apenas usuários autenticados podem ler mensagens
-      allow read: if request.auth != null;
+      // Somente usuários autenticados lêem mensagens
+      allow read: if isAuth();
 
-      // Ninguém pode atualizar ou excluir mensagens (imutável)
+      // Imutável pelo cliente
       allow update, delete: if false;
     }
 
-    // Configurações públicas (leitura pública, escrita apenas via Admin SDK)
+    // ── Configurações públicas ─────────────────────────────────────────────────
+
     match /public_config/{docId} {
       allow read: if true;
-      allow write: if false;  // Apenas via Admin SDK
+      allow write: if false; // Apenas via Admin SDK
     }
   }
 }
