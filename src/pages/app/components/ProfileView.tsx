@@ -47,7 +47,7 @@ export default function ProfileView({
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const APP_URL = "https://emdia.readdy.co";
+  const APP_URL = import.meta.env.VITE_SITE_URL || "https://emdiafinanceiro.com.br";
 
   const handleShare = async () => {
     if (navigator.share) {

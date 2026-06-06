@@ -17,7 +17,6 @@ import Sidebar from "@/pages/app/components/Sidebar";
 import TopBar from "@/pages/app/components/TopBar";
 import BottomNav from "@/pages/app/components/BottomNav";
 import DashboardView from "@/pages/app/components/DashboardView";
-import TransactionsView from "@/pages/app/components/TransactionsView";
 import CategoriesView from "@/pages/app/components/CategoriesView";
 import AccountsView from "@/pages/app/components/AccountsView";
 import GoalsView from "@/pages/app/components/GoalsView";

@@ -17,9 +17,12 @@ export default function NotFound() {
         404
       </h1>
       <div className="relative z-10">
-        <h1 className="text-xl md:text-2xl font-semibold mt-6">This page has not been generated</h1>
+        <h1 className="text-xl md:text-2xl font-semibold mt-6">Página não encontrada</h1>
         <p className="mt-2 text-base text-gray-400 font-mono">{location.pathname}</p>
-        <p className="mt-4 text-lg md:text-xl text-gray-500">Tell me more about this page, so I can generate it</p>
+        <p className="mt-4 text-lg md:text-xl text-gray-500">A página que você procura não existe ou foi movida.</p>
+        <a href="/" className="mt-6 inline-block px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">
+          Voltar ao início
+        </a>
       </div>
     </div>
   );

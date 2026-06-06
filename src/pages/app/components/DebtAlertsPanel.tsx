@@ -56,7 +56,6 @@ export default function DebtAlertsPanel({ alerts, onClose, onGoToHistory }: Prop
     <div
       ref={panelRef}
       className="absolute top-14 right-3 w-80 bg-white rounded-2xl border border-slate-100 shadow-xl z-50 overflow-hidden animate-slide-up"
-      style={{ animation: "slideDown 0.2s ease-out" }}
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">

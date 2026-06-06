@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   collection, query, orderBy, onSnapshot,
-  addDoc, doc, updateDoc, deleteDoc,
+  addDoc, doc, updateDoc, deleteDoc, getDocs,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -99,7 +99,24 @@ export function useCategories(userId: string | null) {
     await deleteDoc(doc(db, "users", userId, "categories", id));
   };
 
-  const refresh = useCallback(() => {}, []);
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    const snapshot = await getDocs(collection(db, "users", userId, "categories"));
+    setCategories(
+      snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          user_id: data.user_id ?? userId,
+          name: data.name,
+          icon: data.icon,
+          color: data.color,
+          type: data.type,
+          created_at: data.created_at?.toDate?.()?.toISOString() ?? new Date().toISOString(),
+        } as Category;
+      })
+    );
+  }, [userId]);
 
   return { categories, loading, addCategory, updateCategory, removeCategory, refresh };
 }

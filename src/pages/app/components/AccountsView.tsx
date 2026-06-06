@@ -4,7 +4,7 @@ import type { Account } from "@/hooks/useAccounts";
 
 interface Props {
   accounts: Account[];
-  onAdd: (acc: Omit<Account, "id" | "user_id" | "created_at" | "current_balance">) => void;
+  onAdd: (acc: Omit<Account, "id" | "user_id" | "created_at">) => void;
   onUpdate: (id: string, updates: Partial<Omit<Account, "id" | "user_id" | "created_at">>) => void;
   onRemove: (id: string) => void;
 }
@@ -54,9 +54,9 @@ export default function AccountsView({ accounts, onAdd, onUpdate, onRemove }: Pr
     setModalOpen(true);
   };
 
-  const handleSave = (data: { name: string; type: string; bank?: string; initial_balance: number }) => {
+  const handleSave = (data: { name: string; type: string; bank?: string; initial_balance: number; current_balance?: number }) => {
     if (modalMode === "add") {
-      onAdd(data);
+      onAdd({ ...data, current_balance: data.current_balance ?? data.initial_balance });
     } else if (editingAccount) {
       onUpdate(editingAccount.id, data);
     }

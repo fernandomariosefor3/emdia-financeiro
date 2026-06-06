@@ -28,13 +28,6 @@ const services = [
     color: "from-brand-600 to-brand-800",
   },
   {
-    icon: "ri-robot-line",
-    title: "IA Financeira — Lia",
-    desc: "Assistente inteligente que analisa seu perfil financeiro e oferece recomendações personalizadas.",
-    badge: "IA",
-    color: "from-brand-500 to-brand-700",
-  },
-  {
     icon: "ri-download-cloud-line",
     title: "Exportação de Dados",
     desc: "Exporte seu histórico completo em CSV para análises externas, declaração de IR e muito mais.",
@@ -65,9 +58,7 @@ export default function ServicesSection() {
               key={s.title}
               className="group relative bg-white rounded-2xl border border-slate-100/60 p-7 hover:border-brand-200 transition-all duration-300 cursor-default overflow-hidden shadow-soft hover:shadow-card hover:-translate-y-1"
             >
-              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl`}
-                   style={{backgroundImage: `linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-to))`}}
-              />
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl`} />
               <div className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br ${s.color} mb-5 shadow-glow-green`}>
                 <i className={`${s.icon} text-white text-xl`} />
               </div>

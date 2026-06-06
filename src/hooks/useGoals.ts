@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   collection, query, orderBy, onSnapshot,
-  addDoc, doc, updateDoc, deleteDoc,
+  addDoc, doc, updateDoc, deleteDoc, getDocs,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -76,7 +76,25 @@ export function useGoals(userId: string | null) {
     await deleteDoc(doc(db, "users", userId, "goals", id));
   };
 
-  const refresh = useCallback(() => {}, []);
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    const snapshot = await getDocs(collection(db, "users", userId, "goals"));
+    setGoals(
+      snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          user_id: data.user_id ?? userId,
+          name: data.name,
+          target_amount: Number(data.target_amount ?? 0),
+          current_amount: Number(data.current_amount ?? 0),
+          deadline: data.deadline ?? undefined,
+          status: data.status ?? "em_andamento",
+          created_at: data.created_at?.toDate?.()?.toISOString() ?? new Date().toISOString(),
+        } as Goal;
+      })
+    );
+  }, [userId]);
 
   return { goals, loading, addGoal, updateGoal, removeGoal, refresh };
 }

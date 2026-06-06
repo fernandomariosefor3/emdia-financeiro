@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   collection, query, orderBy, onSnapshot,
-  addDoc, doc, updateDoc, deleteDoc,
+  addDoc, doc, updateDoc, deleteDoc, getDocs,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -85,7 +85,28 @@ export function useDebts(userId: string | null) {
     await deleteDoc(doc(db, "users", userId, "debts", id));
   };
 
-  const refresh = useCallback(() => {}, []);
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    const snapshot = await getDocs(collection(db, "users", userId, "debts"));
+    setDebts(
+      snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          user_id: data.user_id ?? userId,
+          name: data.name ?? undefined,
+          creditor: data.creditor,
+          total_amount: Number(data.total_amount ?? 0),
+          installment_value: Number(data.installment_value ?? 0),
+          total_installments: Number(data.total_installments ?? 0),
+          paid_installments: Number(data.paid_installments ?? 0),
+          start_date: data.start_date,
+          interest_rate: data.interest_rate ?? undefined,
+          created_at: data.created_at?.toDate?.()?.toISOString() ?? new Date().toISOString(),
+        } as Debt;
+      })
+    );
+  }, [userId]);
 
   const totalDebt = debts.reduce((sum, d) => sum + (d.total_amount ?? 0), 0);
   const totalRemaining = debts.reduce(
