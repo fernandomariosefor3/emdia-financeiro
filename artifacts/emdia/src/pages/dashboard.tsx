@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -7,7 +8,7 @@ import {
 import {
   TrendingUp, TrendingDown, DollarSign, LogOut,
   ArrowUpRight, ArrowDownRight, Plus, ReceiptText, ShieldCheck,
-  LayoutDashboard, Zap, Home,
+  LayoutDashboard, Zap, Menu,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,6 +18,7 @@ import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 function fmt(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -52,6 +54,7 @@ export default function Dashboard() {
   const { user, logOut, isAdmin } = useAuth();
   const [, navigate] = useLocation();
   const { transactions, loading } = useTransactions();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const now = new Date();
   const thisMonth = { start: startOfMonth(now), end: endOfMonth(now) };
@@ -176,15 +179,54 @@ export default function Dashboard() {
             </div>
             <span className="font-extrabold text-base text-[#0A0F1E]">emdia</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="text-gray-500 gap-1.5 text-xs" onClick={() => navigate("/transacoes")}>
-              <ReceiptText size={14} /> Transações
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-500 gap-1.5 text-xs" onClick={handleLogout}>
-              <LogOut size={14} />
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" className="text-gray-500" onClick={() => setMobileMenuOpen(true)}>
+            <Menu size={20} />
+          </Button>
         </header>
+
+        {/* Mobile Sheet drawer */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="right" className="w-64 bg-white p-0">
+            <SheetHeader className="p-5 border-b border-gray-50">
+              <SheetTitle className="flex items-center gap-2 text-base font-extrabold text-[#0A0F1E]">
+                <div className="w-8 h-8 rounded-lg bg-[#1AC87E] flex items-center justify-center">
+                  <TrendingUp size={16} className="text-white" />
+                </div>
+                emdia
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="p-3 space-y-0.5">
+              {navItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                    item.active ? "bg-[#1AC87E]/10 text-[#1AC87E]" : "text-gray-500 hover:bg-gray-50 hover:text-[#0A0F1E]"
+                  }`}
+                >
+                  <item.icon size={16} />{item.label}
+                </button>
+              ))}
+            </nav>
+            <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-50">
+              <div className="flex items-center gap-3 px-3 py-2 mb-1">
+                <div className="w-8 h-8 rounded-full bg-[#1AC87E]/10 flex items-center justify-center text-[#1AC87E] text-xs font-extrabold flex-shrink-0">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-[#0A0F1E] truncate">{user?.displayName?.split(" ")[0] ?? "Usuário"}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                <LogOut size={15} /> Sair
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
 
       <main className="max-w-5xl mx-auto px-5 py-7 space-y-7 w-full">
         {/* Greeting */}
@@ -203,11 +245,16 @@ export default function Dashboard() {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-2xl bg-gray-200" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <StatCard title="Saldo do mês" value={fmt(balanceThisMonth)} sub={balanceThisMonth >= 0 ? "Positivo ✓" : "Atenção: negativo"} icon={DollarSign} color="#1AC87E" positive={balanceThisMonth >= 0} />
             <StatCard title="Receitas" value={fmt(incomeThisMonth)} sub="este mês" icon={TrendingUp} color="#1AC87E" positive={true} />
             <StatCard title="Despesas" value={fmt(expenseThisMonth)} sub={expenseDiff === 0 ? "sem histórico anterior" : `${expenseDiff > 0 ? "+" : ""}${expenseDiff.toFixed(1)}% vs mês anterior`} icon={TrendingDown} color={expenseDiff <= 0 ? "#1AC87E" : "#EF4444"} positive={expenseDiff <= 0} />
-          </div>
+          </motion.div>
         )}
 
         {/* Admin Panel */}
@@ -237,7 +284,12 @@ export default function Dashboard() {
         )}
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <Card className="bg-white border border-gray-100 shadow-sm lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-sm font-bold text-[#0A0F1E]">Receitas vs Despesas (6 meses)</CardTitle>
@@ -306,9 +358,14 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Recent Transactions */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
         <Card className="bg-white border border-gray-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold text-[#0A0F1E]">Transações recentes</CardTitle>
@@ -328,9 +385,19 @@ export default function Dashboard() {
                 </Button>
               </div>
             ) : (
-              <ul className="divide-y divide-gray-50">
+              <motion.ul
+                className="divide-y divide-gray-50"
+                initial="hidden"
+                animate="visible"
+                variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+              >
                 {recent.map((tx) => (
-                  <li key={tx.id} className="py-3.5 flex items-center justify-between">
+                  <motion.li
+                    key={tx.id}
+                    className="py-3.5 flex items-center justify-between"
+                    variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tx.type === "income" ? "bg-[#1AC87E]/10" : "bg-red-50"}`}>
                         {tx.type === "income" ? <ArrowUpRight size={16} className="text-[#1AC87E]" /> : <ArrowDownRight size={16} className="text-red-500" />}
@@ -343,12 +410,13 @@ export default function Dashboard() {
                     <span className={`font-bold text-sm ${tx.type === "income" ? "text-[#1AC87E]" : "text-red-500"}`}>
                       {tx.type === "income" ? "+" : "-"}{fmt(tx.amount)}
                     </span>
-                  </li>
+                  </motion.li>
                 ))}
-              </ul>
+              </motion.ul>
             )}
           </CardContent>
         </Card>
+        </motion.div>
       </main>
       </div>
     </div>

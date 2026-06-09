@@ -5,9 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { motion } from "framer-motion";
 import {
   Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight,
-  TrendingUp, ChevronLeft, Loader2, Search,
+  TrendingUp, ChevronLeft, Loader2, Search, ReceiptText,
 } from "lucide-react";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUserPlan } from "@/lib/useUserPlan";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,6 +166,7 @@ export default function Transacoes() {
   const [showDialog, setShowDialog] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [search, setSearch] = useState("");
 
@@ -295,14 +298,39 @@ export default function Transacoes() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-16 text-center text-gray-400">
-                <p>Nenhuma transação encontrada.</p>
+                <ReceiptText size={40} className="mx-auto mb-3 opacity-25" />
+                <p className="font-medium text-gray-500">Nenhuma transação encontrada</p>
+                <p className="text-sm mt-1">
+                  {search || filterType !== "all"
+                    ? "Tente ajustar os filtros ou a busca"
+                    : "Adicione sua primeira transação para começar"}
+                </p>
+                {!search && filterType === "all" && (
+                  <Button
+                    size="sm"
+                    className="mt-4 bg-[#1AC87E] hover:bg-[#15a868] text-white gap-1.5"
+                    onClick={openNew}
+                  >
+                    <Plus size={14} /> Nova transação
+                  </Button>
+                )}
               </div>
             ) : (
-              <ul className="divide-y divide-gray-50">
+              <motion.ul
+                className="divide-y divide-gray-50"
+                initial="hidden"
+                animate="visible"
+                variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+              >
                 {filtered.map((tx) => {
                   const cat = DEFAULT_CATEGORIES.find((c) => c.name === tx.category);
                   return (
-                    <li key={tx.id} className="py-3.5 flex items-center justify-between group">
+                    <motion.li
+                      key={tx.id}
+                      className="py-3.5 flex items-center justify-between group"
+                      variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <div className="flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
@@ -340,16 +368,16 @@ export default function Transacoes() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-gray-300 hover:text-red-500"
-                            onClick={() => deleteTransaction(tx.id)}
+                            onClick={() => setDeleteId(tx.id)}
                           >
                             <Trash2 size={13} />
                           </Button>
                         </div>
                       </div>
-                    </li>
+                    </motion.li>
                   );
                 })}
-              </ul>
+              </motion.ul>
             )}
           </CardContent>
         </Card>
@@ -362,6 +390,27 @@ export default function Transacoes() {
         feature="unlimited"
         description="Você atingiu o limite de transações do plano gratuito este mês."
       />
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <AlertDialogContent className="bg-white border-gray-100 text-[#0A0F1E]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#0A0F1E] font-bold">Excluir transação?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              Essa ação não pode ser desfeita. A transação será removida permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-gray-500">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={() => { if (deleteId) { deleteTransaction(deleteId); setDeleteId(null); } }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) setEditing(null); }}>

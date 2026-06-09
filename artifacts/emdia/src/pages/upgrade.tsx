@@ -1,25 +1,43 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { PLAN_INFO } from "@/lib/plans";
 import { useUserPlan } from "@/lib/useUserPlan";
 import { ProBadge } from "@/lib/ProBadge";
 
+const faqs = [
+  { q: "Como funciona a garantia de 7 dias?", a: "Se você não ficar satisfeito com o plano Pro nos primeiros 7 dias, devolvemos 100% do valor. Sem perguntas." },
+  { q: "Posso cancelar a qualquer momento?", a: "Sim! Você pode cancelar sua assinatura a qualquer momento. Seu acesso continua até o final do período pago." },
+  { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos cartão de crédito (Visa, Mastercard, Elo), PIX e boleto bancário. Pagamentos processados com segurança pelo Stripe." },
+];
+
 export default function Upgrade() {
-  const { userPlan, loading } = useUserPlan();
+  const { userPlan } = useUserPlan();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Se já é Pro, mostra mensagem de sucesso
   if (userPlan.isPro || userPlan.isEnterprise) {
     return (
-      <div className="min-h-screen bg-[#0A0F1E] text-white">
-        <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="min-h-screen bg-[#0A0F1E] text-white flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-4xl w-full py-12"
+        >
           <div className="text-center mb-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#1AC87E] to-[#15B36D] rounded-full flex items-center justify-center mx-auto mb-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+              className="w-20 h-20 bg-gradient-to-br from-[#1AC87E] to-[#15B36D] rounded-full flex items-center justify-center mx-auto mb-6"
+            >
               <svg className="w-10 h-10 text-[#0A0F1E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-            </div>
+            </motion.div>
             <h1 className="text-3xl font-bold mb-2">Você já é Pro!</h1>
             <p className="text-gray-400">Aproveite todos os benefícios do seu plano.</p>
             <div className="mt-4">
@@ -29,12 +47,18 @@ export default function Upgrade() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PLAN_INFO.pro.features.map((feature, i) => (
-              <div key={i} className="bg-[#1A1F3A] rounded-xl p-4 flex items-center gap-3">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="bg-[#1A1F3A] rounded-xl p-4 flex items-center gap-3"
+              >
                 <svg className="w-5 h-5 text-[#1AC87E] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="text-sm">{feature}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -46,7 +70,7 @@ export default function Upgrade() {
               Voltar ao Dashboard
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -71,13 +95,23 @@ export default function Upgrade() {
       {/* Header */}
       <div className="bg-gradient-to-b from-[#1A1F3A] to-[#0A0F1E] py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             Desbloqueie todo o potencial do{" "}
             <span className="text-[#1AC87E]">emdia</span>
-          </h1>
-          <p className="text-gray-400 text-lg mb-8">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-gray-400 text-lg mb-8"
+          >
             Tenha controle total das suas finanças com o plano Pro
-          </p>
+          </motion.p>
 
           {/* Toggle de cobrança */}
           <div className="inline-flex items-center gap-4 bg-[#1A1F3A] rounded-full p-1">
@@ -109,7 +143,12 @@ export default function Upgrade() {
       </div>
 
       {/* Pricing */}
-      <div className="max-w-4xl mx-auto px-4 -mt-8 pb-12">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="max-w-4xl mx-auto px-4 -mt-8 pb-12"
+      >
         <div className="bg-[#1A1F3A] rounded-3xl p-8 border border-[#1AC87E]/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Left side - Plan info */}
@@ -195,7 +234,7 @@ export default function Upgrade() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Comparison */}
       <div className="max-w-4xl mx-auto px-4 pb-12">
@@ -278,43 +317,43 @@ export default function Upgrade() {
       {/* FAQ */}
       <div className="max-w-2xl mx-auto px-4 pb-16">
         <h2 className="text-2xl font-bold text-center mb-8">Perguntas Frequentes</h2>
-
-        <div className="space-y-4">
-          <details className="bg-[#1A1F3A] rounded-xl overflow-hidden group">
-            <summary className="p-4 cursor-pointer font-semibold hover:bg-[#252A4A] transition-colors flex items-center justify-between">
-              Como funciona a garantia de 7 dias?
-              <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div className="p-4 pt-0 text-gray-400 text-sm">
-              Se você não ficar satisfeito com o plano Pro nos primeiros 7 dias, devolvemos 100% do valor. Sem perguntas.
-            </div>
-          </details>
-
-          <details className="bg-[#1A1F3A] rounded-xl overflow-hidden group">
-            <summary className="p-4 cursor-pointer font-semibold hover:bg-[#252A4A] transition-colors flex items-center justify-between">
-              Posso cancelar a qualquer momento?
-              <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div className="p-4 pt-0 text-gray-400 text-sm">
-              Sim! Você pode cancelar sua assinatura a qualquer momento. Sua acesso continua até o final do período pago.
-            </div>
-          </details>
-
-          <details className="bg-[#1A1F3A] rounded-xl overflow-hidden group">
-            <summary className="p-4 cursor-pointer font-semibold hover:bg-[#252A4A] transition-colors flex items-center justify-between">
-              Quais formas de pagamento são aceitas?
-              <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div className="p-4 pt-0 text-gray-400 text-sm">
-              Aceitamos cartão de crédito (Visa, Mastercard, Elo), PIX e boleto bancário. Pagamentos processados com segurança pelo Stripe.
-            </div>
-          </details>
+        <div className="space-y-3">
+          {faqs.map((faq, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 * i }}
+              className="bg-[#1A1F3A] rounded-xl overflow-hidden"
+            >
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#252A4A] transition-colors"
+              >
+                <span className="font-semibold text-sm pr-4">{faq.q}</span>
+                <motion.span
+                  animate={{ rotate: openFaq === i ? 45 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-[#1AC87E] font-bold text-xl flex-shrink-0"
+                >
+                  +
+                </motion.span>
+              </button>
+              <AnimatePresence>
+                {openFaq === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <p className="px-5 pb-5 text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
