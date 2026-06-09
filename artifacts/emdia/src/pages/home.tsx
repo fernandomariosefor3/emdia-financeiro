@@ -4,13 +4,12 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Wallet, TrendingDown, BellDot, BarChart2, Sparkles, FileDown } from "lucide-react";
 import { db } from "../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 const APP_URL = "/cadastro";
 const LOGIN_URL = "/login";
-const HERO_BG = "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1920&q=80&auto=format&fit=crop";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -86,12 +85,12 @@ const steps = [
 ];
 
 const features = [
-  { icon: "💰", title: "Controle de Receitas", desc: "Registre todas as suas entradas e acompanhe o crescimento da sua renda mês a mês." },
-  { icon: "📉", title: "Gestão de Despesas", desc: "Categorize gastos automaticamente e descubra onde seu dinheiro está indo." },
-  { icon: "🔔", title: "Controle de Dívidas", desc: "Alertas automáticos para vencimentos. Nunca mais pague juros por esquecimento." },
-  { icon: "📊", title: "Relatórios Visuais", desc: "Gráficos em tempo real que mostram sua saúde financeira de forma clara e intuitiva." },
-  { icon: "🤖", title: "IA Financeira — Lia", desc: "Sua assistente pessoal de finanças que aprende com seu perfil e dá sugestões inteligentes." },
-  { icon: "📤", title: "Exportação de Dados", desc: "Exporte todo o histórico em CSV para análise em planilhas. Disponível no plano Pro." },
+  { Icon: Wallet, color: "#1AC87E", title: "Controle de Receitas", desc: "Registre todas as suas entradas e acompanhe o crescimento da sua renda mês a mês." },
+  { Icon: TrendingDown, color: "#EF4444", title: "Gestão de Despesas", desc: "Categorize gastos automaticamente e descubra onde seu dinheiro está indo." },
+  { Icon: BellDot, color: "#F59E0B", title: "Controle de Dívidas", desc: "Alertas automáticos para vencimentos. Nunca mais pague juros por esquecimento." },
+  { Icon: BarChart2, color: "#3B82F6", title: "Relatórios Visuais", desc: "Gráficos em tempo real que mostram sua saúde financeira de forma clara e intuitiva." },
+  { Icon: Sparkles, color: "#8B5CF6", title: "IA Financeira — Lia", desc: "Sua assistente pessoal de finanças que aprende com seu perfil e dá sugestões inteligentes." },
+  { Icon: FileDown, color: "#10B981", title: "Exportação de Dados", desc: "Exporte todo o histórico em CSV para análise em planilhas. Disponível no plano Pro." },
 ];
 
 const testimonials = [
@@ -189,13 +188,13 @@ function Hero() {
   const satisfaction = useCountUp(99, 1500, inView);
 
   return (
-    <section className="relative min-h-screen flex flex-col">
-      {/* Background photo */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${HERO_BG})` }}
-      />
-      <div className="absolute inset-0 bg-[#0A0F1E]/60" />
+    <section className="relative min-h-screen flex flex-col bg-[#0A0F1E] overflow-hidden">
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1E] via-[#0d1630] to-[#071a0e]" />
+      {/* Dot grid pattern */}
+      <div className="absolute inset-0 opacity-[0.045]" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+      {/* Green ambient glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[#1AC87E]/6 blur-3xl pointer-events-none" />
 
       <div className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-24 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -228,10 +227,49 @@ function Hero() {
           </a>
         </motion.div>
 
-        {/* Floating logo */}
-        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-12 w-16 h-16 rounded-2xl bg-[#1AC87E] shadow-2xl border-2 border-white/20 animate-bounce flex items-center justify-center">
-          <TrendingUp size={32} className="text-white" />
+        {/* Dashboard card mockup */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-14 relative w-full max-w-xs mx-auto"
+        >
+          <div className="bg-white/8 backdrop-blur-xl border border-white/12 rounded-3xl p-5 text-left shadow-2xl shadow-black/40">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white/55 text-xs font-medium">Saldo do mês</span>
+              <span className="text-[10px] text-[#1AC87E] bg-[#1AC87E]/15 px-2.5 py-0.5 rounded-full font-bold tracking-wide">+12% ↑</span>
+            </div>
+            <div className="text-[1.6rem] font-extrabold text-white mb-4 tracking-tight">R$ 2.847,00</div>
+            <div className="space-y-2.5 mb-4">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-white/45 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#1AC87E] flex-shrink-0" />Receitas
+                </span>
+                <span className="text-[#1AC87E] font-bold">R$ 4.500</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-white/45 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />Despesas
+                </span>
+                <span className="text-red-400 font-bold">R$ 1.653</span>
+              </div>
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-[63%] bg-gradient-to-r from-[#1AC87E] to-[#0fa85f] rounded-full" />
+            </div>
+            <div className="mt-1.5 flex justify-between text-[10px] text-white/25">
+              <span>Meta mensal</span><span>63%</span>
+            </div>
+          </div>
+          {/* Floating badge */}
+          <motion.div
+            animate={{ y: [-5, 5, -5] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+            className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-2xl px-3 py-2 flex items-center gap-2"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#1AC87E] flex-shrink-0" />
+            <span className="text-xs font-bold text-[#0A0F1E] whitespace-nowrap">Meta quase lá! 🎯</span>
+          </motion.div>
         </motion.div>
       </div>
 
@@ -366,8 +404,11 @@ function Features() {
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <motion.div key={i} variants={fadeUp}
-              className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm hover:border-[#1AC87E]/30 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-              <div className="text-3xl mb-4">{f.icon}</div>
+              className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm hover:border-[#1AC87E]/25 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300"
+                style={{ backgroundColor: `${f.color}14` }}>
+                <f.Icon size={22} style={{ color: f.color }} />
+              </div>
               <h3 className="font-bold text-lg text-[#0A0F1E] mb-2">{f.title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
             </motion.div>

@@ -7,6 +7,7 @@ import {
 import {
   TrendingUp, TrendingDown, DollarSign, LogOut,
   ArrowUpRight, ArrowDownRight, Plus, ReceiptText, ShieldCheck,
+  LayoutDashboard, Zap, Home,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -94,32 +95,98 @@ export default function Dashboard() {
     navigate("/");
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#1AC87E] flex items-center justify-center">
-            <TrendingUp size={16} className="text-white" />
-          </div>
-          <span className="font-extrabold text-lg text-[#0A0F1E]">emdia</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {isAdmin && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1AC87E]/10 border border-[#1AC87E]/30 text-[#1AC87E] text-xs font-bold">
-              <ShieldCheck size={13} /> Admin
-            </span>
-          )}
-          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-[#0A0F1E] gap-2" onClick={() => navigate("/transacoes")}>
-            <ReceiptText size={16} /> Transações
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-[#0A0F1E] gap-2" onClick={handleLogout}>
-            <LogOut size={16} /> Sair
-          </Button>
-        </div>
-      </header>
+  const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", active: true },
+    { icon: ReceiptText, label: "Transações", path: "/transacoes", active: false },
+    { icon: Zap, label: "Upgrade Pro", path: "/upgrade", active: false },
+  ];
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+  const initials = user?.displayName
+    ? user.displayName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "U";
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
+      {/* ── Sidebar (desktop) ── */}
+      <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-gray-100 fixed top-0 left-0 bottom-0 z-20 shadow-sm">
+        {/* Logo */}
+        <div className="p-5 border-b border-gray-50">
+          <a href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-[#1AC87E] flex items-center justify-center shadow-sm shadow-[#1AC87E]/30">
+              <TrendingUp size={16} className="text-white" />
+            </div>
+            <span className="font-extrabold text-lg text-[#0A0F1E]">emdia</span>
+          </a>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 py-2">Menu</p>
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                item.active
+                  ? "bg-[#1AC87E]/10 text-[#1AC87E]"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-[#0A0F1E]"
+              }`}
+            >
+              <item.icon size={16} />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* User + logout */}
+        <div className="p-3 border-t border-gray-50 space-y-1">
+          {isAdmin && (
+            <div className="flex items-center gap-2 px-3 py-2">
+              <ShieldCheck size={13} className="text-[#1AC87E]" />
+              <span className="text-xs font-bold text-[#1AC87E]">Administrador</span>
+            </div>
+          )}
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-8 h-8 rounded-full bg-[#1AC87E]/12 flex items-center justify-center text-[#1AC87E] text-xs font-extrabold flex-shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-[#0A0F1E] truncate">{user?.displayName?.split(" ")[0] ?? "Usuário"}</p>
+              <p className="text-[10px] text-gray-400 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+          >
+            <LogOut size={15} /> Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main area ── */}
+      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen">
+
+        {/* Mobile header */}
+        <header className="lg:hidden bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#1AC87E] flex items-center justify-center">
+              <TrendingUp size={14} className="text-white" />
+            </div>
+            <span className="font-extrabold text-base text-[#0A0F1E]">emdia</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="text-gray-500 gap-1.5 text-xs" onClick={() => navigate("/transacoes")}>
+              <ReceiptText size={14} /> Transações
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-500 gap-1.5 text-xs" onClick={handleLogout}>
+              <LogOut size={14} />
+            </Button>
+          </div>
+        </header>
+
+      <main className="max-w-5xl mx-auto px-5 py-7 space-y-7 w-full">
         {/* Greeting */}
         <div>
           <h1 className="text-2xl font-extrabold text-[#0A0F1E]">
@@ -283,6 +350,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
+      </div>
     </div>
   );
 }

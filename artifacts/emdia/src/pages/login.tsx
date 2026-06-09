@@ -3,8 +3,10 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion } from "framer-motion";
-import { Loader2, TrendingUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, TrendingUp, ArrowLeft } from "lucide-react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,9 @@ export default function Login() {
   const { signIn } = useAuth();
   const [, navigate] = useLocation();
   const [error, setError] = useState("");
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotStatus, setForgotStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -34,6 +39,18 @@ export default function Login() {
       navigate("/dashboard");
     } catch {
       setError("E-mail ou senha incorretos.");
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotStatus("loading");
+    try {
+      await sendPasswordResetEmail(auth, forgotEmail);
+      setForgotStatus("sent");
+    } catch {
+      setForgotStatus("error");
     }
   }
 
@@ -52,7 +69,59 @@ export default function Login() {
           <span className="text-[#0A0F1E] text-xl font-extrabold">emdia</span>
         </div>
 
-        <Card className="bg-white border border-gray-100 shadow-sm">
+        <Card className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <AnimatePresence mode="wait">
+            {forgotMode ? (
+              <motion.div key="forgot" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.2 }}>
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-2xl font-extrabold text-[#0A0F1E]">Redefinir senha</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Enviaremos um link para o seu e-mail
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {forgotStatus === "sent" ? (
+                    <div className="py-6 text-center space-y-3">
+                      <div className="w-14 h-14 rounded-full bg-[#1AC87E]/10 flex items-center justify-center mx-auto">
+                        <span className="text-[#1AC87E] text-2xl">✓</span>
+                      </div>
+                      <p className="font-semibold text-[#0A0F1E]">E-mail enviado!</p>
+                      <p className="text-gray-400 text-sm">Verifique sua caixa de entrada e siga as instruções.</p>
+                      <button onClick={() => { setForgotMode(false); setForgotStatus("idle"); setForgotEmail(""); }}
+                        className="mt-4 text-[#1AC87E] text-sm font-semibold hover:underline">
+                        Voltar ao login
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[#0A0F1E] font-medium">E-mail</Label>
+                        <Input
+                          type="email" required value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          placeholder="seu@email.com"
+                          className="border-gray-200 bg-white text-[#0A0F1E] placeholder:text-gray-300 focus:border-[#1AC87E] focus:ring-[#1AC87E]/20"
+                        />
+                      </div>
+                      {forgotStatus === "error" && (
+                        <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                          <p className="text-red-500 text-sm text-center">E-mail não encontrado. Tente novamente.</p>
+                        </div>
+                      )}
+                      <Button type="submit" disabled={forgotStatus === "loading"}
+                        className="w-full bg-[#1AC87E] hover:bg-[#15a868] text-white font-semibold h-11 shadow-md shadow-[#1AC87E]/20">
+                        {forgotStatus === "loading" ? <Loader2 size={18} className="animate-spin" /> : "Enviar link de redefinição"}
+                      </Button>
+                      <button type="button" onClick={() => { setForgotMode(false); setForgotStatus("idle"); }}
+                        className="w-full flex items-center justify-center gap-1.5 text-gray-400 text-sm hover:text-gray-600 transition-colors">
+                        <ArrowLeft size={14} /> Voltar ao login
+                      </button>
+                    </form>
+                  )}
+                </CardContent>
+              </motion.div>
+            ) : (
+              <motion.div key="login" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }} transition={{ duration: 0.2 }}>
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-extrabold text-[#0A0F1E]">Bem-vindo de volta</CardTitle>
             <CardDescription className="text-gray-400">
@@ -98,6 +167,16 @@ export default function Login() {
               >
                 {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Entrar"}
               </Button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setForgotMode(true)}
+                  className="text-gray-400 text-xs hover:text-[#1AC87E] transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
             </form>
 
             <p className="text-center text-gray-400 text-sm mt-6">
@@ -113,6 +192,9 @@ export default function Login() {
               </a>
             </p>
           </CardContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
       </motion.div>
     </div>
