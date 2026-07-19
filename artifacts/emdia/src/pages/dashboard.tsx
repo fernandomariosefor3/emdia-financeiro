@@ -20,8 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-// Imports limpos e sem aspas duplas formatadas erradas
-import { InsightsCard } from "@/components/InsightsCard"
+// Imports corretos
+import { InsightsCard } from "@/components/CardInteligente"
 import { AIChatInput } from "@/components/AIChatInput"
 
 function fmt(value: number) {
