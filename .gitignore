@@ -52,3 +52,10 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Ignorar artefatos de deploy e caches
+deploy-*.zip
+*.log
+.firebase/
+.vercel/
+

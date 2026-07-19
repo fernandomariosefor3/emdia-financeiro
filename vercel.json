@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm --filter './artifacts/emdia' run build",
+  "outputDirectory": "artifacts/emdia/dist/public",
+  "installCommand": "pnpm install",
+  "framework": "vite",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

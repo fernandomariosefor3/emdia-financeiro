@@ -2,15 +2,109 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Cada usuário só acessa os próprios dados
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
     }
 
-    // Mensagens de contato — qualquer um pode criar, admin pode ler
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('.*@.*\\..*');
+    }
+
+    function validPlan(plan) {
+      return plan in ['free', 'pro', 'enterprise'];
+    }
+
+    // Valida documento de usuário (criação e atualização)
+    function isValidUserData(data) {
+      let required = data.keys().hasAll(['email', 'createdAt']);
+      let emailOk  = isValidEmail(data.email);
+      let planOk   = !data.keys().hasAny(['plan']) || validPlan(data.plan);
+      let countOk  = !data.keys().hasAny(['transactionsThisMonth'])
+                     || (data.transactionsThisMonth is int && data.transactionsThisMonth >= 0);
+      let sizeOk   = data.keys().size() <= 15;
+      return required && emailOk && planOk && countOk && sizeOk;
+    }
+
+    // Valida documento de transação
+    function isValidTransaction(data) {
+      let required    = data.keys().hasAll(['amount', 'type', 'category', 'description', 'date', 'createdAt']);
+      let amountOk    = data.amount is number && data.amount > 0 && data.amount < 1000000000;
+      let typeOk      = data.type in ['income', 'expense'];
+      let categoryOk  = data.category is string && data.category.size() > 0 && data.category.size() <= 100;
+      let descOk      = data.description is string && data.description.size() > 0 && data.description.size() <= 500;
+      let dateOk      = data.date is string && data.date.size() == 10; // yyyy-MM-dd
+      let sizeOk      = data.keys().size() <= 12;
+      return required && amountOk && typeOk && categoryOk && descOk && dateOk && sizeOk;
+    }
+
+    // ── Usuários ───────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      // Apenas o próprio usuário lê seus dados
+      allow read: if isOwner(userId);
+
+      // Criação: valida dados obrigatórios
+      allow create: if isOwner(userId) && isValidUserData(request.resource.data);
+
+      // Atualização: valida dados e impede troca de plan sem webhook
+      // (plan só é atualizado via Firebase Admin SDK / Cloud Functions)
+      allow update: if isOwner(userId)
+                    && isValidUserData(request.resource.data)
+                    && (!request.resource.data.keys().hasAny(['plan'])
+                        || request.resource.data.plan == resource.data.plan);
+
+      // Nunca permite deletar pela SDK de cliente
+      allow delete: if false;
+    }
+
+    // ── Transações (subcoleção) ────────────────────────────────────────────────
+
+    match /users/{userId}/transactions/{txId} {
+      // Apenas o dono lê suas transações
+      allow read: if isOwner(userId);
+
+      // Criação: valida campos da transação
+      allow create: if isOwner(userId) && isValidTransaction(request.resource.data);
+
+      // Atualização: valida e impede troca de createdAt
+      allow update: if isOwner(userId)
+                    && isValidTransaction(request.resource.data)
+                    && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Apenas o próprio usuário pode deletar
+      allow delete: if isOwner(userId);
+    }
+
+    // ── Mensagens de contato ───────────────────────────────────────────────────
+
     match /contact_messages/{docId} {
-      allow create: if true;
-      allow read: if request.auth != null;
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 100
+                    && isValidEmail(request.resource.data.email)
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 2000;
+
+      // Somente usuários autenticados lêem mensagens
+      allow read: if isAuth();
+
+      // Imutável pelo cliente
+      allow update, delete: if false;
+    }
+
+    // ── Configurações públicas ─────────────────────────────────────────────────
+
+    match /public_config/{docId} {
+      allow read: if true;
+      allow write: if false; // Apenas via Admin SDK
     }
   }
 }

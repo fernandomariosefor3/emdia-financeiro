@@ -1,30 +1,23 @@
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { UserPlanProvider } from "@/lib/useUserPlan";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Cadastro from "@/pages/cadastro";
 import Dashboard from "@/pages/dashboard";
 import Transacoes from "@/pages/transacoes";
+import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
-
-const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   const [location] = useLocation();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0F1E] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#1AC87E] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
 
   return <Component />;
 }
@@ -32,18 +25,13 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function PublicRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0F1E] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#1AC87E] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  if (loading) return <LoadingSpinner />;
   if (user) return <Redirect to="/dashboard" />;
 
   return <Component />;
 }
+
+const queryClient = new QueryClient();
 
 function Router() {
   return (
@@ -61,6 +49,9 @@ function Router() {
       <Route path="/transacoes">
         <ProtectedRoute component={Transacoes} />
       </Route>
+      <Route path="/upgrade">
+        <ProtectedRoute component={Upgrade} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -68,12 +59,16 @@ function Router() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <UserPlanProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+          </UserPlanProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
