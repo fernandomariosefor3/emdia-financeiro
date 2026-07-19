@@ -19,8 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { InsightsCard } from "@/components/InsightsCard";
-import { AIChatInput } from "@/components/AIChatInput";
+
+// Imports limpos e sem aspas duplas formatadas erradas
+import { InsightsCard } from "@/components/InsightsCard"
+import { AIChatInput } from "@/components/AIChatInput"
 
 function fmt(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -92,10 +94,8 @@ export default function Dashboard() {
     return { category: biggestCategory, amount, percentage };
   }, [thisMonthTx, expenseThisMonth]);
 
-  // A MÁGICA: A comunicação com a IA na Nuvem
   const handleSendMessage = async (text: string) => {
     try {
-      // URL oficial do Google Cloud Functions para o seu projeto EMDIA
       const urlServidorIA = "https://us-central1-emdiafinanceiro-13483.cloudfunctions.net/processarGastoComIA";
       
       const resposta = await fetch(urlServidorIA, {
