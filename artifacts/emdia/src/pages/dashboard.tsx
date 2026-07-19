@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // Imports corretos
-import { InsightsCard } from "@/components/CardInteligente"
+import { CardInteligente } from "@/components/CardInteligente"
 import { AIChatInput } from "@/components/AIChatInput"
 
 function fmt(value: number) {
