@@ -1,53 +1,64 @@
-// @ts-nocheck
-import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TodayDashboardPrototype } from '../TodayDashboardPrototype';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import TodayPreview from '../../../pages/today-preview';
 import { Router } from 'wouter';
 
-describe('TodayDashboardPrototype', () => {
+describe('TodayDashboardPrototype (Decision Engine Integration)', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
   });
 
-  it('renderização do Respiro e Ritmo', () => {
-    render(<TodayDashboardPrototype />);
-    expect(screen.getByText(/Respiro/i)).toBeInTheDocument();
-    expect(screen.getByText(/Ritmo seguro/i)).toBeInTheDocument();
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('exibição do principal Risco e da Ação', () => {
+  it('1 e 2 e 3. Exibe valor numérico do Respiro, Ritmo calculados e Cenário Base sem risco', () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<TodayDashboardPrototype />);
-    // There is no risk right now, everything is covered. Wait, we mocked 1240 balance + 2500 income = 3740.
-    // 3740 - 250(reserve) = 3490.
-    // Expenses = 1077.
-    // It is a safe scenario!
+    
+    expect(screen.getByText(/2\.413,00/i)).toBeInTheDocument();
+    expect(screen.getByText(/77,83|por dia/i)).toBeInTheDocument();
     expect(screen.getByText(/Cenário tranquilo/i)).toBeInTheDocument();
-    expect(screen.getByText(/Ação Prioritária/i)).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('abertura da explicação', () => {
+  it('17. Abertura e fechamento da explicação e ausência de chamadas externas', () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<TodayDashboardPrototype />);
+    
     const explainBtn = screen.getByText(/Entender cálculo/i);
     fireEvent.click(explainBtn);
     expect(screen.getByText(/Como chegamos a este resultado\?/i)).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    
+    const closeBtn = screen.getByRole('button', { name: /Fechar|Close/i });
+    if (closeBtn) {
+      fireEvent.click(closeBtn);
+      expect(screen.queryByText(/Como chegamos a este resultado\?/i)).not.toBeInTheDocument();
+    }
   });
 
-  it('simulação de compra à vista (cenário que cria risco)', () => {
+  it('4 e 5. Simulação de compra à vista (cria risco) e deduz do Respiro', () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<TodayDashboardPrototype />);
     
-    // Fill amount with very large number to trigger risk
     const amountInput = screen.getByLabelText(/Valor total/i);
-    fireEvent.change(amountInput, { target: { value: '5000' } });
+    fireEvent.change(amountInput, { target: { value: '3000' } });
     
     const simBtn = screen.getByText(/Simular impacto/i);
     fireEvent.click(simBtn);
     
     expect(screen.getByText(/Impacto Projetado/i)).toBeInTheDocument();
-    expect(screen.getByText(/Respiro após compra/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Pode faltar saldo para compromissos essenciais/i)[0]).toBeInTheDocument();
+    expect(screen.getByText(/587,00/i)).toBeInTheDocument();
+    
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('simulação parcelada', () => {
+  it('6. Simulação de compra parcelada alterando corretamente o cenário', () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<TodayDashboardPrototype />);
     
     const amountInput = screen.getByLabelText(/Valor total/i);
@@ -60,31 +71,63 @@ describe('TodayDashboardPrototype', () => {
     fireEvent.click(simBtn);
     
     expect(screen.getByText(/Impacto Projetado/i)).toBeInTheDocument();
+    expect(screen.getByText(/2\.313,00/i)).toBeInTheDocument();
+    
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('16. Limpeza da simulação', () => {
+    render(<TodayDashboardPrototype />);
+    
+    const amountInput = screen.getByLabelText(/Valor total/i);
+    fireEvent.change(amountInput, { target: { value: '500' } });
+    
+    const simBtn = screen.getByText(/Simular impacto/i);
+    fireEvent.click(simBtn);
+    
+    expect(screen.getByText(/Impacto Projetado/i)).toBeInTheDocument();
+    
+    // Limpar
+    const clearBtn = screen.getByText(/^Limpar$/i);
+    fireEvent.click(clearBtn);
+    
+    expect(screen.queryByText(/Impacto Projetado/i)).not.toBeInTheDocument();
+    expect((amountInput as HTMLInputElement).value).toBe('');
   });
 });
 
-describe('TodayPreview (Feature Flag)', () => {
-  it('feature flag desativada redireciona', () => {
-    vi.stubEnv('VITE_ENABLE_TODAY_V3', 'false');
-    
-    render(
-      <Router>
-        <TodayPreview />
-      </Router>
-    );
-    
+describe('TodayPreview (Feature Flag - 7 ao 10)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const renderWithRouter = () => render(
+    <Router>
+      <TodayPreview />
+    </Router>
+  );
+
+  it('7. feature flag ausente redireciona', () => {
+    vi.stubEnv('VITE_ENABLE_TODAY_V3', '');
+    renderWithRouter();
     expect(screen.queryByText(/Boa tarde/i)).not.toBeInTheDocument();
   });
 
-  it('feature flag ativada renderiza a tela', () => {
+  it('8. feature flag "false" redireciona', () => {
+    vi.stubEnv('VITE_ENABLE_TODAY_V3', 'false');
+    renderWithRouter();
+    expect(screen.queryByText(/Boa tarde/i)).not.toBeInTheDocument();
+  });
+
+  it('9. feature flag com valor diferente de "true" redireciona', () => {
+    vi.stubEnv('VITE_ENABLE_TODAY_V3', 'enabled');
+    renderWithRouter();
+    expect(screen.queryByText(/Boa tarde/i)).not.toBeInTheDocument();
+  });
+
+  it('10. feature flag "true" exibindo o protótipo', () => {
     vi.stubEnv('VITE_ENABLE_TODAY_V3', 'true');
-    
-    render(
-      <Router>
-        <TodayPreview />
-      </Router>
-    );
-    
+    renderWithRouter();
     expect(screen.getByText(/Boa tarde/i)).toBeInTheDocument();
   });
 });

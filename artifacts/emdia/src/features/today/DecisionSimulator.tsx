@@ -31,11 +31,29 @@ export function DecisionSimulator({
   const [installments, setInstallments] = useState(1);
   const [startDate, setStartDate] = useState(referenceDate);
   const [scenario, setScenario] = useState<FinancialScenario | null>(null);
+  const [error, setError] = useState("");
 
   const handleSimulate = () => {
-    if (!amountInReals || isNaN(Number(amountInReals))) return;
+    setError("");
+    if (!amountInReals) {
+      setError("O valor deve ser maior que zero");
+      return;
+    }
+    const val = Number(amountInReals);
+    if (isNaN(val) || val <= 0) {
+      setError("O valor deve ser maior que zero");
+      return;
+    }
+    if (installments > 48) {
+      setError("O número máximo de parcelas é 48");
+      return;
+    }
+    if (!startDate || new Date(startDate) > new Date(horizonDate) || new Date(startDate) < new Date(referenceDate)) {
+      setError("Data inválida ou fora do horizonte");
+      return;
+    }
     
-    const amountInCents = realsToCents(Number(amountInReals));
+    const amountInCents = realsToCents(val);
     
     const result = simulatePurchase({
       currentBalanceInCents,
@@ -60,6 +78,7 @@ export function DecisionSimulator({
 
   const handleClear = () => {
     setScenario(null);
+    setError("");
     setAmountInReals("");
     setDescription("");
     setInstallments(1);
@@ -95,6 +114,8 @@ export function DecisionSimulator({
           <Button onClick={handleSimulate}>Simular impacto</Button>
           {scenario && <Button variant="outline" onClick={handleClear}>Limpar</Button>}
         </div>
+
+        {error && <p className="text-sm font-medium text-destructive mt-2">{error}</p>}
 
         <div aria-live="polite">
           {scenario && (

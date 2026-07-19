@@ -29,13 +29,16 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         run: pnpm run typecheck
 
       - name: Test Decision Engine
         run: pnpm --filter "./artifacts/emdia" run test:finance
+
+      - name: Test Today UI
+        run: pnpm --filter "./artifacts/emdia" run test:ui
 
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
@@ -54,7 +57,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Audit dependencies (high+ severity)
         run: pnpm audit --audit-level=high
@@ -79,7 +82,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm --filter "./artifacts/emdia" run build
