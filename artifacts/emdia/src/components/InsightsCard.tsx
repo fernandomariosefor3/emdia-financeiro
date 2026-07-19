@@ -1,50 +1,60 @@
-import { Zap, ArrowRight, Brain } from "lucide-react";
+import { useState } from "react";
+import { Mic, Send, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 
-interface InsightsCardProps {
-  category: string;
-  amount: number;
-  percentage: number;
+interface ChatInputProps {
+  onSendMessage: (text: string) => Promise<void>;
 }
 
-export function InsightsCard({ category, amount, percentage }: InsightsCardProps) {
-  // Formatar o valor para R$
-  const formattedAmount = new Intl.NumberFormat("pt-BR", { 
-    style: "currency", 
-    currency: "BRL" 
-  }).format(amount);
+export function AIChatInput({ onSendMessage }: ChatInputProps) {
+  const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSend() {
+    if (!text.trim()) return;
+    setIsLoading(true);
+    try {
+      await onSendMessage(text);
+      setText(""); 
+    } catch (error) {
+      console.error("Erro ao enviar mensagem", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
-    <div className="bg-gradient-to-r from-[#0A0F1E] to-[#141E3A] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-      {/* Decoração de fundo */}
-      <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-        <Brain size={120} />
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-2 flex items-end gap-2 relative mt-8">
+      <div className="absolute -top-3 left-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+        <Sparkles size={10} /> Assistente de Bolso
       </div>
-
-      <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3 text-[#1AC87E]">
-          <Zap size={18} className="fill-[#1AC87E]" />
-          <span className="font-bold text-sm tracking-wide uppercase">Copilot Financeiro</span>
-        </div>
-        
-        <h3 className="text-xl font-extrabold mb-2 text-white">
-          Atenção aos gastos com {category} 🎯
-        </h3>
-        
-        <p className="text-gray-300 text-sm mb-5 max-w-lg leading-relaxed">
-          Nossa IA notou que {category} representa <strong className="text-white">{percentage.toFixed(0)}%</strong> das suas despesas totais neste mês, totalizando <strong className="text-white">{formattedAmount}</strong>. Considere reduzir esses gastos nos próximos dias para não estourar a meta.
-        </p>
-        
-        <div className="flex items-center gap-3">
-          <Button className="bg-[#1AC87E] hover:bg-[#15A86A] text-white rounded-xl font-semibold border-none">
-            Ver detalhes de {category}
-          </Button>
-          <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-white/10 rounded-xl group">
-            Dispensar
-            <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-      </div>
+      <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors shrink-0">
+        <Mic size={20} />
+      </button>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        placeholder="Ex: Comprei 15 reais de pão na padaria agora"
+        className="flex-1 max-h-32 min-h-[44px] resize-none outline-none py-3 text-sm text-[#0A0F1E] bg-transparent"
+        rows={1}
+      />
+      <Button 
+        onClick={handleSend} 
+        disabled={!text.trim() || isLoading}
+        className={`h-11 w-11 rounded-xl p-0 shrink-0 transition-all ${
+          text.trim() && !isLoading 
+            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20" 
+            : "bg-gray-100 text-gray-400"
+        }`}
+      >
+        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="ml-1" />}
+      </Button>
     </div>
   );
 }
