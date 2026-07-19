@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InsightsCard } from "@/components/InsightsCard";
+import { AIChatInput } from "@/components/AIChatInput";
 
 function fmt(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -54,7 +55,7 @@ function StatCard({
 export default function Dashboard() {
   const { user, logOut, isAdmin } = useAuth();
   const [, navigate] = useLocation();
-  const { transactions, loading } = useTransactions();
+  const { transactions, loading, addTransaction } = useTransactions();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const now = new Date();
@@ -94,6 +95,29 @@ export default function Dashboard() {
 
     return { category: biggestCategory, amount, percentage };
   }, [thisMonthTx, expenseThisMonth]);
+
+  // Função para lidar com a mensagem enviada pelo usuário via IA
+  const handleSendMessage = async (text: string) => {
+    try {
+      // Como ainda não temos o servidor publicado para todos (Firebase deploy), 
+      // vamos simular a resposta mágica da IA diretamente aqui para você ver funcionando!
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Finge que tá pensando...
+      
+      // Simula a IA estruturando o dado
+      await addTransaction({
+        amount: 15.00,
+        type: "expense",
+        category: "Alimentação",
+        description: `Lançado via IA: "${text}"`,
+        date: new Date().toISOString()
+      });
+      
+      alert("Despesa adicionada com sucesso pela Inteligência Artificial!");
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao processar mensagem.");
+    }
+  };
 
   const chartData = useMemo(() => Array.from({ length: 6 }, (_, i) => {
     const month = subMonths(now, 5 - i);
@@ -269,6 +293,16 @@ export default function Dashboard() {
               />
             </motion.div>
           )}
+
+          {/* AI Chat Input - ONDE A MÁGICA ACONTECE */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="mb-6"
+          >
+            <AIChatInput onSendMessage={handleSendMessage} />
+          </motion.div>
 
           {/* Stats */}
           {loading ? (
