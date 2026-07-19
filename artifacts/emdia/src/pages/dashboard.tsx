@@ -55,7 +55,7 @@ function StatCard({
 export default function Dashboard() {
   const { user, logOut, isAdmin } = useAuth();
   const [, navigate] = useLocation();
-  const { transactions, loading, addTransaction } = useTransactions();
+  const { transactions, loading } = useTransactions();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const now = new Date();
@@ -92,24 +92,34 @@ export default function Dashboard() {
     return { category: biggestCategory, amount, percentage };
   }, [thisMonthTx, expenseThisMonth]);
 
+  // =============== AQUI ESTÁ A LIGAÇÃO OFICIAL COM A I.A. ===============
   const handleSendMessage = async (text: string) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
+      // Quando ligar o Firebase Functions no seu terminal (npm run serve), 
+      // confira se este link gerado por ele bate com este abaixo e ajuste se necessário!
+      const urlServidorIA = "http://127.0.0.1:5001/emdia-financeiro/us-central1/processarGastoComIA";
       
-      await addTransaction({
-        amount: 15.00,
-        type: "expense",
-        category: "Alimentação",
-        description: `Lançado via IA: "${text}"`,
-        date: new Date().toISOString()
+      const resposta = await fetch(urlServidorIA, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          texto: text, 
+          userId: user?.uid 
+        })
       });
+
+      const resultado = await resposta.json();
       
-      alert("Despesa adicionada com sucesso pela Inteligência Artificial!");
+      if (!resposta.ok) throw new Error(resultado.error || "Erro do servidor");
+      
+      alert(`Cadastrado pela Inteligência Artificial:\n${resultado.dados.description} - R$ ${resultado.dados.amount}`);
+      
     } catch (e) {
-      console.error(e);
-      alert("Erro ao processar mensagem.");
+      console.error("Erro na comunicação com a IA", e);
+      alert("Houve um problema ao processar a despesa. Certifique-se de que o emulador do Firebase está rodando.");
     }
   };
+  // =======================================================================
 
   const chartData = useMemo(() => Array.from({ length: 6 }, (_, i) => {
     const month = subMonths(now, 5 - i);
@@ -401,4 +411,13 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
             <h3 className="font-extrabold text-[#0A0F1E]">Atalhos Rápidos</h3>
             <div className="flex gap-3 w-full sm:w-auto">
-              <Button onClick={() => navigate("/transacoes")} className="flex-1 
+              <Button onClick={() => navigate("/transacoes")} className="flex-1 sm:flex-none bg-[#1AC87E] hover:bg-[#15A86A] text-white rounded-xl shadow-sm shadow-[#1AC87E]/20">
+                <Plus size={16} className="mr-2" /> Nova Transação
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
