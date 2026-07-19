@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Firebase Hosting and Functions
 on:
   push:
     branches: [ main ]
@@ -16,10 +16,10 @@ jobs:
         with:
           version: latest
 
-      - name: Install dependencies
+      - name: Install Frontend dependencies
         run: pnpm install
 
-      - name: Build
+      - name: Build Frontend
         run: pnpm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -29,9 +29,15 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Install and Build Backend (IA)
+        run: |
+          cd functions
+          npm install
+          npm run build
+
+      - name: Deploy to Firebase (Hosting & Functions)
+        uses: w9jds/firebase-action@master
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EMDIA }}
-          channelId: live
-          projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          args: deploy
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EMDIA }}
