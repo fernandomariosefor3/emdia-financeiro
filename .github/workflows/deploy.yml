@@ -34,6 +34,9 @@ jobs:
       - name: Type check
         run: pnpm run typecheck
 
+      - name: Test Decision Engine
+        run: pnpm --filter "./artifacts/emdia" run test:finance
+
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
     name: Security Audit
