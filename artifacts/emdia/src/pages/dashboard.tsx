@@ -92,12 +92,11 @@ export default function Dashboard() {
     return { category: biggestCategory, amount, percentage };
   }, [thisMonthTx, expenseThisMonth]);
 
-  // =============== AQUI ESTÁ A LIGAÇÃO OFICIAL COM A I.A. ===============
+  // A MÁGICA: A comunicação com a IA na Nuvem
   const handleSendMessage = async (text: string) => {
     try {
-      // Quando ligar o Firebase Functions no seu terminal (npm run serve), 
-      // confira se este link gerado por ele bate com este abaixo e ajuste se necessário!
-      const urlServidorIA = "http://127.0.0.1:5001/emdia-financeiro/us-central1/processarGastoComIA";
+      // URL oficial do Google Cloud Functions para o seu projeto EMDIA
+      const urlServidorIA = "https://us-central1-emdiafinanceiro-13483.cloudfunctions.net/processarGastoComIA";
       
       const resposta = await fetch(urlServidorIA, {
         method: "POST",
@@ -116,10 +115,9 @@ export default function Dashboard() {
       
     } catch (e) {
       console.error("Erro na comunicação com a IA", e);
-      alert("Houve um problema ao processar a despesa. Certifique-se de que o emulador do Firebase está rodando.");
+      alert("A Inteligência Artificial ainda está inicializando ou indisponível.");
     }
   };
-  // =======================================================================
 
   const chartData = useMemo(() => Array.from({ length: 6 }, (_, i) => {
     const month = subMonths(now, 5 - i);
