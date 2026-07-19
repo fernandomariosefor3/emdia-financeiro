@@ -206,5 +206,5 @@ firebase deploy
 MIT License — © 2024 Fernando Mário
 
 ---
-
+19/07/2026
 Feito com 💚 para ajudar brasileiros a controlarem suas finanças
