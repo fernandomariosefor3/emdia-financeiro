@@ -71,18 +71,15 @@ export default function Dashboard() {
   const expenseLastMonth = lastMonthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const expenseDiff = expenseLastMonth > 0 ? ((expenseThisMonth - expenseLastMonth) / expenseLastMonth) * 100 : 0;
 
-  // Lógica para o Insight Dinâmico (Maior Categoria de Despesa)
   const biggestExpenseInsight = useMemo(() => {
     const expenses = thisMonthTx.filter((t) => t.type === "expense");
     if (expenses.length === 0 || expenseThisMonth === 0) return null;
 
-    // Agrupa por categoria
     const categoryTotals = expenses.reduce((acc, t) => {
       acc[t.category] = (acc[t.category] || 0) + t.amount;
       return acc;
     }, {} as Record<string, number>);
 
-    // Acha a maior
     const biggestCategory = Object.keys(categoryTotals).reduce((a, b) => 
       categoryTotals[a] > categoryTotals[b] ? a : b
     );
@@ -90,20 +87,15 @@ export default function Dashboard() {
     const amount = categoryTotals[biggestCategory];
     const percentage = (amount / expenseThisMonth) * 100;
 
-    // Só mostra o alerta se a categoria representar mais de 20% dos gastos
     if (percentage < 20) return null;
 
     return { category: biggestCategory, amount, percentage };
   }, [thisMonthTx, expenseThisMonth]);
 
-  // Função para lidar com a mensagem enviada pelo usuário via IA
   const handleSendMessage = async (text: string) => {
     try {
-      // Como ainda não temos o servidor publicado para todos (Firebase deploy), 
-      // vamos simular a resposta mágica da IA diretamente aqui para você ver funcionando!
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Finge que tá pensando...
+      await new Promise(resolve => setTimeout(resolve, 1500)); 
       
-      // Simula a IA estruturando o dado
       await addTransaction({
         amount: 15.00,
         type: "expense",
@@ -154,9 +146,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* ── Sidebar (desktop) ── */}
       <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-gray-100 fixed top-0 left-0 bottom-0 z-20 shadow-sm">
-        {/* Logo */}
         <div className="p-5 border-b border-gray-50">
           <a href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-lg bg-[#1AC87E] flex items-center justify-center shadow-sm shadow-[#1AC87E]/30">
@@ -166,7 +156,6 @@ export default function Dashboard() {
           </a>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 py-2">Menu</p>
           {navItems.map((item) => (
@@ -185,7 +174,6 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        {/* User + logout */}
         <div className="p-3 border-t border-gray-50 space-y-1">
           {isAdmin && (
             <div className="flex items-center gap-2 px-3 py-2">
@@ -211,7 +199,6 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* ── Mobile Header ── */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 flex items-center justify-between px-5 z-20">
         <a href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-[#1AC87E] flex items-center justify-center">
@@ -266,10 +253,8 @@ export default function Dashboard() {
         </Sheet>
       </header>
 
-      {/* ── Main content (offset for sidebar/header) ── */}
       <div className="flex-1 lg:ml-60 pt-16 lg:pt-0">
         <main className="max-w-5xl mx-auto px-5 py-7 space-y-7 w-full">
-          {/* Greeting */}
           <div>
             <h1 className="text-2xl font-extrabold text-[#0A0F1E]">
               Olá, {user?.displayName?.split(" ")[0] ?? "usuário"} 👋
@@ -279,7 +264,6 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* AI Insights (Copilot) */}
           {!loading && biggestExpenseInsight && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -294,7 +278,6 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* AI Chat Input - ONDE A MÁGICA ACONTECE */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -304,7 +287,6 @@ export default function Dashboard() {
             <AIChatInput onSendMessage={handleSendMessage} />
           </motion.div>
 
-          {/* Stats */}
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-2xl bg-gray-200" />)}
@@ -322,7 +304,6 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* Admin Panel */}
           {isAdmin && (
             <div className="bg-[#1AC87E]/10 border border-[#1AC87E]/20 rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -340,9 +321,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-7">
-            {/* Main Chart */}
             <Card className="lg:col-span-2 bg-white border-gray-100 shadow-sm">
               <CardHeader className="pb-2 border-b border-gray-50">
                 <CardTitle className="text-sm font-extrabold text-[#0A0F1E]">Fluxo de Caixa (6 meses)</CardTitle>
@@ -375,7 +354,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Pie Chart */}
             <Card className="bg-white border-gray-100 shadow-sm flex flex-col">
               <CardHeader className="pb-2 border-b border-gray-50">
                 <CardTitle className="text-sm font-extrabold text-[#0A0F1E]">Despesas por Categoria</CardTitle>
@@ -383,7 +361,7 @@ export default function Dashboard() {
               <CardContent className="pt-6 flex-1 flex flex-col items-center justify-center">
                 {pieData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-gray-400 space-y-2 h-full py-10">
-                    <PieChart size={40} className="opacity-20" />
+                    <PieChart className="opacity-20" width={40} height={40} />
                     <p className="text-xs font-medium">Sem despesas este mês</p>
                   </div>
                 ) : (
@@ -420,17 +398,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Quick Actions / Recent */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
             <h3 className="font-extrabold text-[#0A0F1E]">Atalhos Rápidos</h3>
             <div className="flex gap-3 w-full sm:w-auto">
-              <Button onClick={() => navigate("/transacoes")} className="flex-1 sm:flex-none bg-[#1AC87E] hover:bg-[#15A86A] text-white rounded-xl shadow-sm shadow-[#1AC87E]/20">
-                <Plus size={16} className="mr-2" /> Nova Transação
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
+              <Button onClick={() => navigate("/transacoes")} className="flex-1 
