@@ -8,8 +8,7 @@ import {
 import {
   TrendingUp, TrendingDown, DollarSign, LogOut,
   ArrowUpRight, ArrowDownRight, Plus, ReceiptText, ShieldCheck,
-  LayoutDashboard, Zap, Menu,
-  Mic, Send, Sparkles, Loader2, Brain,
+  LayoutDashboard, Zap, Menu, Mic, Send, Sparkles, Loader2, Brain, ArrowRight
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // ==========================================
-// COMPONENTES EMBUTIDOS PARA EVITAR ERRO DE IMPORT
+// COMPONENTES DE IA EMBUTIDOS
 // ==========================================
 
 function AIChatInput({ onSendMessage }: { onSendMessage: (text: string) => Promise<void> }) {
@@ -110,6 +109,10 @@ function CardInteligente({ category, amount, percentage }: { category: string; a
     </div>
   );
 }
+
+// ==========================================
+// CÓDIGO NORMAL DO DASHBOARD
+// ==========================================
 
 function fmt(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -240,7 +243,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-
       <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-gray-100 fixed top-0 left-0 bottom-0 z-20 shadow-sm">
         <div className="p-5 border-b border-gray-50">
           <a href="/" className="flex items-center gap-2 group">
