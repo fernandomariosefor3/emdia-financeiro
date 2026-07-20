@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:finance": "tsx --test src/domain/finance/__tests__/engine.test.ts",
     "test:ui": "vitest run",
-    "test:today-data": "vitest run src/features/today/data/__tests__"
+    "test:today-data": "vitest run src/features/today/data/__tests__",
+    "test:financial-context": "tsx --test src/domain/finance/context/__tests__/*.test.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
