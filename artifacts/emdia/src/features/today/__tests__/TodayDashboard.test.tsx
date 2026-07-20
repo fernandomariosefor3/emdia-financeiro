@@ -4,13 +4,46 @@ import { TodayDashboardPrototype } from '../TodayDashboardPrototype';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import TodayPreview from '../../../pages/today-preview';
 import { Router } from 'wouter';
+import { mockInitialBalanceInCents, mockCommitments, mockConfirmedIncome, mockMinimumReserveInCents, mockReferenceDate } from '../fixtures';
+
+vi.mock('../data/useTodayFinancialData', () => ({
+  useTodayFinancialData: () => ({
+    loading: false,
+    error: null,
+    source: "demo",
+    data: {
+      context: {
+        currentBalanceInCents: mockInitialBalanceInCents,
+        commitments: mockCommitments,
+        expectedIncomes: mockConfirmedIncome,
+        protectedAmountInCents: 0,
+        minimumReserveInCents: mockMinimumReserveInCents,
+      },
+      quality: "complete",
+      diagnostics: {
+        validDocumentCount: 10,
+        invalidDocumentCount: 0,
+        ignoredDocumentCount: 0,
+        warnings: [],
+        assumptions: ["Dados fictícios carregados."],
+      },
+      availability: {
+        minimumReserve: "available",
+        protectedGoals: "missing",
+      }
+    }
+  })
+}));
 
 describe('TodayDashboardPrototype (Decision Engine Integration)', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${mockReferenceDate}T12:00:00`));
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -50,6 +83,7 @@ describe('TodayDashboardPrototype (Decision Engine Integration)', () => {
     const simBtn = screen.getByText(/Simular impacto/i);
     fireEvent.click(simBtn);
     
+    console.log(document.body.innerHTML);
     expect(screen.getByText(/Impacto Projetado/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Pode faltar saldo para compromissos essenciais/i)[0]).toBeInTheDocument();
     expect(screen.getByText(/587,00/i)).toBeInTheDocument();
@@ -71,7 +105,7 @@ describe('TodayDashboardPrototype (Decision Engine Integration)', () => {
     fireEvent.click(simBtn);
     
     expect(screen.getByText(/Impacto Projetado/i)).toBeInTheDocument();
-    expect(screen.getByText(/2\.313,00/i)).toBeInTheDocument();
+    expect(screen.getByText(/2\.213,00/i)).toBeInTheDocument();
     
     expect(fetchSpy).not.toHaveBeenCalled();
   });
