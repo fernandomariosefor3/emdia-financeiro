@@ -3,6 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useTodayFinancialData, TodayDataSource } from "../useTodayFinancialData";
 import { mapTransactionsToContext, RawTransaction } from "../financeDataMappers";
 import * as AuthContext from "../../../../lib/auth-context";
+import type { User } from "firebase/auth";
 
 // Mock Firebase
 vi.mock("firebase/firestore", () => {
@@ -32,10 +33,15 @@ describe("Today Data Integration - 25 Scenarios", () => {
   });
 
   const setupAuth = (uid: string | null) => {
+    const user = uid ? ({ uid } as User) : null;
     vi.spyOn(AuthContext, "useAuth").mockReturnValue({ 
-      user: uid ? { uid } as any : null, 
+      user, 
       loading: false, 
-      error: null 
+      isAdmin: false,
+      signUp: vi.fn(async () => undefined),
+      signIn: vi.fn(async () => undefined),
+      signInWithGoogle: vi.fn(async () => undefined),
+      logOut: vi.fn(async () => undefined)
     });
   };
 

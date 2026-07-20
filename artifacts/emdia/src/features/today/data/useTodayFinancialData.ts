@@ -121,7 +121,7 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
       isMounted = false;
       setData(null);
     };
-  }, [user, sourceState.kind, sourceState.message, referenceDate]); // Add necessary dependencies
+  }, [user, sourceState.kind, sourceState.kind === "configuration-error" ? sourceState.message : null, referenceDate]);
 
   return {
     loading,
