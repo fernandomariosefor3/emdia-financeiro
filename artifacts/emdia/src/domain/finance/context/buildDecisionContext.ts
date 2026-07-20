@@ -1,5 +1,5 @@
 import { FinancialContextDocumentV1, CivilDate } from "./types";
-import { FinancialTransaction, FinancialCommitment, ExpectedIncome as DomainExpectedIncome } from "../../types";
+import { FinancialTransaction, FinancialCommitment, ExpectedIncome as DomainExpectedIncome } from "../types";
 
 export interface BuildDecisionContextResult {
   currentBalanceInCents: number;

@@ -37,8 +37,18 @@ export function validateFinancialContextDocument(
 
   const doc = input as Partial<FinancialContextDocumentV1>;
 
-  if (doc.schemaVersion !== 1) {
+  if (!doc.schemaVersion) {
+    errors.push({ code: "MISSING_SCHEMA_VERSION", message: "Schema version is missing", path: ["schemaVersion"] });
+  } else if (doc.schemaVersion !== 1) {
     errors.push({ code: "INVALID_SCHEMA_VERSION", message: "Schema version must be 1", path: ["schemaVersion"] });
+  }
+
+  if (doc.metadata) {
+    if (doc.metadata.idempotencyKey !== undefined) {
+      if (typeof doc.metadata.idempotencyKey !== "string" || doc.metadata.idempotencyKey.length === 0 || doc.metadata.idempotencyKey.length > 100) {
+        errors.push({ code: "INVALID_IDEMPOTENCY_KEY", message: "Idempotency key must be a valid string up to 100 chars", path: ["metadata", "idempotencyKey"] });
+      }
+    }
   }
 
   if (!doc.referenceBalance) {
@@ -112,6 +122,9 @@ export function validateFinancialContextDocument(
       }
       if (!["monthly", "weekly", "yearly", "custom_interval"].includes(cmt.recurrence)) {
         errors.push({ code: "INVALID_RECURRENCE", message: "Invalid recurrence type", path: ["recurringCommitments", String(index), "recurrence"] });
+      }
+      if (cmt.recurrence === "custom_interval") {
+        errors.push({ code: "UNSUPPORTED_CUSTOM_INTERVAL", message: "Custom interval is not supported in V1", path: ["recurringCommitments", String(index), "recurrence"] });
       }
     });
   }
