@@ -10,13 +10,27 @@ import {
   mockMinimumReserveInCents
 } from "../fixtures";
 
-export type TodayDataSource = "demo" | "firebase";
+type TodayDataSourceState =
+  | { kind: "demo" }
+  | { kind: "firebase" }
+  | { kind: "configuration-error"; message: string };
+
+export type TodayDataSource = "demo" | "firebase" | "error";
 
 export interface UseTodayFinancialDataResult {
   loading: boolean;
   error: string | null;
   data: FinancialContextResult | null;
   source: TodayDataSource;
+}
+
+function resolveDataSource(envSource: unknown): TodayDataSourceState {
+  if (envSource === "demo") return { kind: "demo" };
+  if (envSource === "firebase") return { kind: "firebase" };
+  return { 
+    kind: "configuration-error", 
+    message: "Fonte de dados ausente ou inválida. Configure VITE_TODAY_DATA_SOURCE com 'demo' ou 'firebase'."
+  };
 }
 
 export function useTodayFinancialData(referenceDate: string): UseTodayFinancialDataResult {
@@ -26,7 +40,7 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
   const [error, setError] = useState<string | null>(null);
 
   const envSource = import.meta.env.VITE_TODAY_DATA_SOURCE;
-  const isDemo = envSource !== "firebase";
+  const sourceState = resolveDataSource(envSource);
 
   useEffect(() => {
     let isMounted = true;
@@ -35,8 +49,15 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
       setLoading(true);
       setError(null);
 
-      if (isDemo) {
-        // Modo Demo
+      if (sourceState.kind === "configuration-error") {
+        if (isMounted) {
+          setError(sourceState.message);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (sourceState.kind === "demo") {
         if (isMounted) {
           setData({
             context: {
@@ -64,30 +85,32 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
         return;
       }
 
-      // Modo Firebase
-      if (!user) {
-        if (isMounted) {
-          setError("Usuário não autenticado.");
-          setLoading(false);
+      if (sourceState.kind === "firebase") {
+        if (!user) {
+          if (isMounted) {
+            setError("Usuário não autenticado.");
+            setLoading(false);
+          }
+          return;
         }
-        return;
-      }
 
-      try {
-        const repo = new FirebaseFinanceDataRepository({
-          authenticatedUserId: user.uid,
-        });
+        try {
+          const repo = new FirebaseFinanceDataRepository({
+            authenticatedUserId: user.uid,
+          });
 
-        const result = await repo.getFinancialContext(referenceDate);
+          const result = await repo.getFinancialContext(referenceDate);
 
-        if (isMounted) {
-          setData(result);
-          setLoading(false);
-        }
-      } catch (err: any) {
-        if (isMounted) {
-          setError(err.message || "Erro ao carregar dados financeiros.");
-          setLoading(false);
+          if (isMounted) {
+            setData(result);
+            setLoading(false);
+          }
+        } catch (err: unknown) {
+          if (isMounted) {
+            const message = err instanceof Error ? err.message : "Erro ao carregar dados financeiros.";
+            setError(message);
+            setLoading(false);
+          }
         }
       }
     }
@@ -96,14 +119,14 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
 
     return () => {
       isMounted = false;
-      setData(null); // Limpa ao desmontar ou trocar dependências
+      setData(null);
     };
-  }, [user, isDemo, referenceDate]);
+  }, [user, sourceState.kind, sourceState.message, referenceDate]); // Add necessary dependencies
 
   return {
     loading,
     error,
     data,
-    source: isDemo ? "demo" : "firebase",
+    source: sourceState.kind === "configuration-error" ? "error" : sourceState.kind,
   };
 }
