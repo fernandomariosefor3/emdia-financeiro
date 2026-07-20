@@ -4,8 +4,23 @@ export const validateDate = (dateStr: string): void => {
   if (!DATE_FORMAT_REGEX.test(dateStr)) {
     throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD.`);
   }
-  const dateObj = new Date(`${dateStr}T12:00:00Z`); // Avoid timezone shifts
-  if (Number.isNaN(dateObj.getTime())) {
+  const [yearStr, monthStr, dayStr] = dateStr.split('-');
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+  const day = parseInt(dayStr, 10);
+
+  if (month < 1 || month > 12) {
+    throw new Error(`Invalid date value: ${dateStr}.`);
+  }
+
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  
+  // Leap year check
+  if (month === 2 && ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0))) {
+    daysInMonth[1] = 29;
+  }
+
+  if (day < 1 || day > daysInMonth[month - 1]) {
     throw new Error(`Invalid date value: ${dateStr}.`);
   }
 };

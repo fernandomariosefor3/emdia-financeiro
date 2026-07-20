@@ -1,15 +1,15 @@
 import { ExpectedIncome, FinancialCommitment, MoneyInCents } from "../../../domain/finance/types";
 import { realsToCents } from "../../../domain/finance/money";
-import { compareDates } from "../../../domain/finance/dates";
+import { compareDates, validateDate } from "../../../domain/finance/dates";
 import { FinancialContext, FinancialDataWarning } from "./types";
 
 export interface RawTransaction {
   id: string;
   type?: string;
-  amount?: number | string;
+  amount?: unknown;
   category?: string;
   description?: string;
-  date?: string;
+  date?: unknown;
   createdAt?: string;
   confirmed?: boolean;
 }
@@ -25,7 +25,7 @@ export interface MapTransactionsResult {
   };
 }
 
-function safeParseAmount(amount: any): MoneyInCents | null {
+function safeParseAmount(amount: unknown): MoneyInCents | null {
   if (amount === undefined || amount === null) return null;
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
   if (typeof num !== "number" || !Number.isFinite(num) || Number.isNaN(num) || num < 0) {
@@ -34,12 +34,14 @@ function safeParseAmount(amount: any): MoneyInCents | null {
   return realsToCents(num);
 }
 
-function safeParseDate(date: any): string | null {
+function safeParseDate(date: unknown): string | null {
   if (typeof date !== "string") return null;
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(date)) return null;
-  // Extra validation could be added here
-  return date;
+  try {
+    validateDate(date);
+    return date;
+  } catch (error) {
+    return null;
+  }
 }
 
 export function mapTransactionsToContext(
