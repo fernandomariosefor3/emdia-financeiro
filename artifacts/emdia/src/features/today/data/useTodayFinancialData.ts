@@ -130,3 +130,4 @@ export function useTodayFinancialData(referenceDate: string): UseTodayFinancialD
     source: sourceState.kind === "configuration-error" ? "error" : sourceState.kind,
   };
 }
+// Source narrowing aligned
