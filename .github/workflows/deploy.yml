@@ -43,6 +43,9 @@ jobs:
       - name: Test Today UI
         run: pnpm --filter "./artifacts/emdia" run test:ui
 
+      - name: Test Today Data
+        run: pnpm --filter "./artifacts/emdia" run test:today-data
+
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
     name: Security Audit
