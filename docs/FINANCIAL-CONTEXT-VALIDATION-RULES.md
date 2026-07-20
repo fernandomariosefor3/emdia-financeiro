@@ -12,3 +12,6 @@
 - Explicit Zero: Configured minimum reserve of 0 must have `explicitZero: true`. If > 0, it must have `explicitZero: false`.
 - Bounds: Arrays must not exceed defined limits. Strings must not exceed max lengths.
 - Duplicate IDs: Checked within each domain array.
+
+## Security Audit Note
+In our CI pipeline, the `pnpm audit --audit-level=high` step is currently configured with `continue-on-error: true`. This means that vulnerabilities found by the audit **will not block the pipeline**. A future P0 task has been added to the backlog to evaluate and enforce blocking merges on high severity vulnerabilities. The pipeline is passing, but this does not imply "Security Audit aprovado sem vulnerabilidades" unless explicitly checked in the CI logs.

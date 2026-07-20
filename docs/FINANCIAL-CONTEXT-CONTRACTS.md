@@ -19,3 +19,7 @@ The Financial Context encapsulates the confirmed state of a user's finances for 
 - **ReferenceBalance**: The explicit initial balance confirmed at a specific civil date.
 - **MinimumReserveSetting**: Allows explicit missing state or explicit 0 via `explicitZero`.
 - **ExpectedIncome**, **RecurringCommitment**, **ProtectedGoal**: Core domain arrays with limit boundaries.
+
+## Behaviors
+- **Idempotency Key**: Validated strictly as a non-empty string up to 100 characters. Absence is permitted but not silently invented. Ensures identical requests don't cause anomalies upon retry.
+- **Custom Interval**: The `custom_interval` recurrence is currently marked as `UNSUPPORTED_CUSTOM_INTERVAL` in V1 and rejected. No contract is allowed to accept data that the engine cannot correctly project yet.
