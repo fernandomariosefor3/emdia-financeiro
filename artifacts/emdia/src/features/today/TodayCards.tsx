@@ -7,14 +7,15 @@ import { ptBR } from "date-fns/locale";
 interface BreathingRoomCardProps {
   breathingRoomInCents: number;
   onExplainClick?: () => void;
+  isPartial?: boolean;
 }
 
-export function BreathingRoomCard({ breathingRoomInCents, onExplainClick }: BreathingRoomCardProps) {
+export function BreathingRoomCard({ breathingRoomInCents, onExplainClick, isPartial }: BreathingRoomCardProps) {
   return (
     <Card className="bg-primary text-primary-foreground border-none">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium text-primary-foreground/80 flex justify-between items-center">
-          Respiro
+          {isPartial ? "Respiro estimado" : "Respiro"}
           <button 
             onClick={onExplainClick}
             className="text-xs underline text-primary-foreground/70 hover:text-primary-foreground"
