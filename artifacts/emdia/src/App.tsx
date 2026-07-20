@@ -11,6 +11,7 @@ import Dashboard from "@/pages/dashboard";
 import Transacoes from "@/pages/transacoes";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
+import TodayPreview from "@/pages/today-preview";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
@@ -51,6 +52,9 @@ function Router() {
       </Route>
       <Route path="/upgrade">
         <ProtectedRoute component={Upgrade} />
+      </Route>
+      <Route path="/today-preview">
+        <ProtectedRoute component={TodayPreview} />
       </Route>
       <Route component={NotFound} />
     </Switch>
