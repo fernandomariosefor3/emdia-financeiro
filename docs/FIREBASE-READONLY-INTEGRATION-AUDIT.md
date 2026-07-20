@@ -37,8 +37,10 @@
 - Nenhum acesso a dados de terceiros é possível, pois a subcoleção é estritamente vinculada ao `user.uid`.
 
 ## Regras Atuais do Firestore e Assinaturas
-- O acesso a transações é feito por `onSnapshot` com ordenação `orderBy("date", "desc")`.
-- Tratamento de loading/erro e re-fetch quando o `user.uid` muda já está estabelecido no `use-transactions.ts`.
+- As operações efetivamente utilizadas são `orderBy` e `getDocs`. 
+- Não há uso de `where` na implementação atual, pois todas as transações do usuário são retornadas e filtradas em memória local.
+- O tratamento de loading/erro e re-fetch quando o `user.uid` muda está estabelecido.
+- A segurança do `firestore.rules` foi analisada apenas estaticamente, não comprovada por emulador. Não houve teste das Rules com o Firebase Emulator.
 
 ## Proposta de Adaptação ao Decision Engine (Read-only)
 - **FinancialContext Mapping:**
