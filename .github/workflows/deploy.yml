@@ -4,8 +4,11 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
-    types: [opened, synchronize]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 
 env:
   NODE_VERSION: '22'
@@ -33,6 +36,9 @@ jobs:
 
       - name: Type check
         run: pnpm run typecheck
+
+      - name: Test Decision Engine
+        run: pnpm --filter "./artifacts/emdia" run test:finance
 
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
