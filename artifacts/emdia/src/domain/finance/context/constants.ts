@@ -1,0 +1,9 @@
+export const MAX_EXPECTED_INCOMES = 50;
+export const MAX_RECURRING_COMMITMENTS = 100;
+export const MAX_PROTECTED_GOALS = 20;
+export const MAX_DESCRIPTION_LENGTH = 100;
+export const MAX_NAME_LENGTH = 50;
+export const MAX_PLANNING_HORIZON_DAYS = 365; // 1 year max horizon
+export const MAX_MONEY_IN_CENTS = 99999999999; // roughly 1 billion reals
+export const MAX_RECURRENCE_INTERVAL_DAYS = 365;
+export const STALE_CONTEXT_THRESHOLD_DAYS = 15;
