@@ -11,7 +11,8 @@
     "test:finance": "tsx --test src/domain/finance/__tests__/engine.test.ts",
     "test:ui": "vitest run src/features/today/__tests__/TodayDashboard.test.tsx",
     "test:today-data": "vitest run src/features/today/data/__tests__",
-    "test:financial-context": "tsx --test src/domain/finance/context/__tests__/*.test.ts"
+    "test:financial-context": "tsx --test src/domain/finance/context/__tests__/*.test.ts",
+    "test:prepare-month": "vitest run src/features/prepare-month/__tests__"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
