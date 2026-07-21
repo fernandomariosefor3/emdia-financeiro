@@ -12,8 +12,9 @@ import Transacoes from "@/pages/transacoes";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
 import TodayPreview from "@/pages/today-preview";
+import PrepareMonthPreview from "@/pages/prepare-month-preview";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+export function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   const [location] = useLocation();
 
@@ -55,6 +56,9 @@ function Router() {
       </Route>
       <Route path="/today-preview">
         <ProtectedRoute component={TodayPreview} />
+      </Route>
+      <Route path="/prepare-month-preview">
+        <ProtectedRoute component={PrepareMonthPreview} />
       </Route>
       <Route component={NotFound} />
     </Switch>

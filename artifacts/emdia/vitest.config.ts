@@ -6,6 +6,12 @@ export default mergeConfig(viteConfig, defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './setupTests.ts',
-    include: ['src/features/today/__tests__/**/*.test.tsx', 'src/features/today/**/__tests__/**/*.test.ts', 'src/features/today/**/__tests__/**/*.test.tsx']
+    include: [
+      'src/features/today/__tests__/**/*.test.tsx',
+      'src/features/today/**/__tests__/**/*.test.ts',
+      'src/features/today/**/__tests__/**/*.test.tsx',
+      'src/features/prepare-month/__tests__/**/*.test.ts',
+      'src/features/prepare-month/__tests__/**/*.test.tsx',
+    ]
   }
 }))
