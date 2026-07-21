@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { formatMoney } from "@/domain/finance/money";
-import { FinancialRisk, RecommendedAction } from "@/domain/finance/types";
+import { FinancialRisk } from "@/domain/finance/types";
 import { DataQuality } from "@/domain/finance/context/types";
+import { FormattedRecommendedAction } from "../formatRecommendedActionForUser";
 
 const DATA_QUALITY_LABELS: Record<DataQuality, string> = {
   complete: "Completa",
@@ -19,8 +20,9 @@ export interface MonthPreviewData {
   dataQuality?: DataQuality;
   breathingRoomInCents?: number;
   safeDailyPaceInCents?: number;
+  projectedBalanceInCents?: number;
   topRisk?: FinancialRisk | null;
-  recommendedAction?: RecommendedAction;
+  recommendedAction?: FormattedRecommendedAction;
   assumptions: string[];
   ignoredNotes: string[];
 }
@@ -35,7 +37,7 @@ export function MonthPreviewStep({ preview, onRestart, headingRef }: MonthPrevie
   return (
     <div className="space-y-6">
       <div>
-        <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
           Veja como seu mês pode ficar
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
@@ -91,7 +93,7 @@ export function MonthPreviewStep({ preview, onRestart, headingRef }: MonthPrevie
             <div className="border rounded-lg p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Ação recomendada</p>
               <p className="mt-1 font-medium text-sm">{preview.recommendedAction.title}</p>
-              <p className="text-sm text-muted-foreground mt-1">{preview.recommendedAction.explanation}</p>
+              <p className="text-sm text-muted-foreground mt-1">{preview.recommendedAction.message}</p>
             </div>
           )}
 

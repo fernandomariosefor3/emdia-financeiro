@@ -26,7 +26,7 @@ export function ReserveStep({ value, onChange, errors, headingRef }: ReserveStep
   return (
     <div className="space-y-6">
       <div>
-        <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
           Reserva mínima
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
