@@ -1,7 +1,7 @@
 # Prepare Your Month — Matriz de Testes (Fase 5A)
 
-Matriz dos 30 cenários exigidos, cobertos por 31 testes em `test:prepare-month` (script
-independente de `test:ui` e `test:today-data`).
+Matriz dos 30 cenários originais + 14 cenários de hardening, cobertos por 46 testes em
+`test:prepare-month` (script independente de `test:ui` e `test:today-data`).
 
 | # | Cenário | Arquivo | Resultado |
 |---|---------|---------|-----------|
@@ -37,7 +37,29 @@ independente de `test:ui` e `test:today-data`).
 | 30 | entrada original não é mutada | `buildContextFromForm.test.ts` | Pass |
 
 Dois testes adicionais de suporte em `buildContextFromForm.test.ts` cobrem `parseReaisInputToCents`
-retornando `null` (não zero) para entrada vazia e para entrada não numérica — total de 31 testes.
+retornando `null` (não zero) para entrada vazia e para entrada não numérica.
+
+## Hardening (rodada de endurecimento pré-Ready)
+
+| # | Cenário | Arquivo | Resultado |
+|---|---------|---------|-----------|
+| H1 | projectedBalance não é zero fabricado | `buildPrepareMonthPreview.test.ts` | Pass |
+| H2 | projeção com saldo positivo (sem eventos) | `buildPrepareMonthPreview.test.ts` | Pass |
+| H3 | projeção com compromisso deduz o valor | `buildPrepareMonthPreview.test.ts` | Pass |
+| H4 | projeção com renda confirmada soma o valor | `buildPrepareMonthPreview.test.ts` | Pass |
+| H5 | renda provável ignorada também na projeção | `buildPrepareMonthPreview.test.ts` | Pass |
+| H6 | ação crítica usa R$ (não centavos crus) | `formatRecommendedActionForUser.test.ts` | Pass |
+| H7 | ação de risco alto usa R$ | `formatRecommendedActionForUser.test.ts` | Pass |
+| H8 | nenhuma mensagem contém "centavos" | `formatRecommendedActionForUser.test.ts` | Pass |
+| H9 | nenhuma mensagem expõe reasonCodes técnicos | `formatRecommendedActionForUser.test.ts` | Pass |
+| H10 | função de prévia é determinística | `buildPrepareMonthPreview.test.ts` | Pass |
+| H11 | função de prévia não altera a entrada | `buildPrepareMonthPreview.test.ts` | Pass |
+| H12 | nenhum termo técnico vaza para a mensagem | `formatRecommendedActionForUser.test.ts` | Pass |
+| H13 | reiniciar continua limpando tudo (reconfirmado) | `PrepareMonthPage.test.tsx` | Pass |
+| H14 | flag de produção continua desligada por padrão | `PrepareMonthPage.test.tsx` | Pass |
+
+Também incluídos: mensagem de ritmo reduzido e mensagem de "manter plano" (ambas cobertas junto
+de H6-H9 em `formatRecommendedActionForUser.test.ts`).
 
 ## Totais por suíte (workspace `artifacts/emdia`)
 
@@ -47,5 +69,5 @@ retornando `null` (não zero) para entrada vazia e para entrada não numérica �
 | `test:ui` | 9 | Pass |
 | `test:today-data` | 25 | Pass |
 | `test:financial-context` | 54 | Pass |
-| `test:prepare-month` | 31 | Pass |
-| **Total único** | **144** | **Pass** |
+| `test:prepare-month` | 46 | Pass |
+| **Total único** | **159** | **Pass** |
