@@ -49,6 +49,9 @@ jobs:
       - name: Test Financial Context
         run: pnpm --filter "./artifacts/emdia" run test:financial-context
 
+      - name: Test Prepare Your Month Prototype
+        run: pnpm --filter "./artifacts/emdia" run test:prepare-month
+
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
     name: Security Audit
