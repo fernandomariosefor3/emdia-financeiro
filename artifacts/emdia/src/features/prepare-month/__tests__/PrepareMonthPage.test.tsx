@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Router } from "wouter";
 import { ProtectedRoute } from "@/App";
-import PrepareMonthPreview from "@/pages/prepare-month-preview";
+import PrepareMonthPreview, { isPrepareMonthEnabled } from "@/pages/prepare-month-preview";
 import { PrepareMonthPage } from "../PrepareMonthPage";
 import { useAuth } from "@/lib/auth-context";
 
@@ -68,6 +68,10 @@ describe("PrepareMonthPreview (Feature Flag e Proteção — 1 a 3)", () => {
     );
     expect(screen.getByText(/Prepare seu mês/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Seu ponto de partida/i })).toBeInTheDocument();
+  });
+
+  it("14. flag ausente (padrão de produção) mantém a experiência desligada", () => {
+    expect(isPrepareMonthEnabled(undefined)).toBe(false);
   });
 });
 
