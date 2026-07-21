@@ -46,6 +46,9 @@ jobs:
       - name: Test Today Data
         run: pnpm --filter "./artifacts/emdia" run test:today-data
 
+      - name: Test Financial Context
+        run: pnpm --filter "./artifacts/emdia" run test:financial-context
+
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
     name: Security Audit
