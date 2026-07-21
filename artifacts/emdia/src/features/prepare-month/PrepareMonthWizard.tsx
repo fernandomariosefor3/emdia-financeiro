@@ -2,45 +2,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  validateFinancialContextDocument,
-  normalizeFinancialContextDocument,
-  buildDecisionContext,
-  ValidationError,
-} from "@/domain/finance/context";
-import { calculateBreathingRoom } from "@/domain/finance/calculateBreathingRoom";
-import { calculateSafeDailyPace } from "@/domain/finance/calculateSafeDailyPace";
-import { detectUpcomingRisks } from "@/domain/finance/detectUpcomingRisks";
-import { buildRecommendedAction } from "@/domain/finance/buildRecommendedAction";
-import { FinancialSnapshot } from "@/domain/finance/types";
 import { addDays } from "@/domain/finance/dates";
 import { PrepareMonthFormState, PREPARE_MONTH_SCREENS } from "./types";
 import { createInitialPrepareMonthState } from "./initialState";
-import { parseReaisInput, parseReaisInputToCents, buildContextFromForm } from "./buildContextFromForm";
+import { parseReaisInput, parseReaisInputToCents } from "./buildContextFromForm";
+import { buildPrepareMonthPreview } from "./buildPrepareMonthPreview";
 import { PrepareMonthProgress } from "./components/PrepareMonthProgress";
 import { ReferenceBalanceStep, ReferenceBalanceStepErrors } from "./components/ReferenceBalanceStep";
 import { ReserveStep, ReserveStepErrors } from "./components/ReserveStep";
 import { ExpectedIncomeStep, ExpectedIncomeStepErrors } from "./components/ExpectedIncomeStep";
 import { CommitmentsStep, CommitmentsStepErrors } from "./components/CommitmentsStep";
 import { ProtectedGoalsStep, ProtectedGoalsStepErrors } from "./components/ProtectedGoalsStep";
-import { MonthPreviewStep, MonthPreviewData } from "./components/MonthPreviewStep";
-
-const ERROR_CODE_MESSAGES: Record<string, string> = {
-  FUTURE_REFERENCE_BALANCE_DATE: "A data do saldo não pode ser no futuro.",
-  INVALID_EXPLICIT_ZERO: "A configuração da reserva mínima ficou inconsistente. Revise a etapa de reserva.",
-  TOO_MANY_EXPECTED_INCOMES: "Você informou mais rendas do que o limite permitido.",
-  TOO_MANY_COMMITMENTS: "Você informou mais compromissos do que o limite permitido.",
-  TOO_MANY_GOALS: "Você informou mais metas do que o limite permitido.",
-  UNSUPPORTED_CUSTOM_INTERVAL: "Recorrência personalizada ainda não é suportada nesta versão.",
-};
-
-const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
-  "Protected amount cannot exceed target": "O valor já protegido não pode ser maior que o valor total da meta.",
-};
-
-function friendlyErrorMessage(error: ValidationError): string {
-  return ERROR_CODE_MESSAGES[error.code] ?? ERROR_MESSAGE_TRANSLATIONS[error.message] ?? error.message;
-}
+import { MonthPreviewStep } from "./components/MonthPreviewStep";
 
 function validateBalanceScreen(state: PrepareMonthFormState, todayIso: string): ReferenceBalanceStepErrors {
   const errors: ReferenceBalanceStepErrors = {};
@@ -162,98 +135,9 @@ export function PrepareMonthWizard() {
     setShowErrors(false);
   }
 
-  const preview: MonthPreviewData = useMemo(() => {
+  const preview = useMemo(() => {
     const nowIso = new Date().toISOString();
-    const rawDoc = buildContextFromForm(formState, nowIso, todayIso);
-    if (!rawDoc) {
-      return {
-        status: "insufficient",
-        blockingMessages: ["Alguns dados informados não puderam ser interpretados. Volte e revise os valores."],
-        assumptions: [],
-        ignoredNotes: [],
-      };
-    }
-
-    const validation = validateFinancialContextDocument(rawDoc, todayIso);
-    if (!validation.success) {
-      return {
-        status: "insufficient",
-        blockingMessages: validation.errors.map(friendlyErrorMessage),
-        assumptions: [],
-        ignoredNotes: [],
-      };
-    }
-
-    const normalized = normalizeFinancialContextDocument(validation.data);
-    const ctx = buildDecisionContext(normalized, [], todayIso, horizonIso);
-
-    const breathing = calculateBreathingRoom({
-      currentBalanceInCents: ctx.currentBalanceInCents,
-      commitments: ctx.commitments,
-      expectedIncomes: ctx.expectedIncomes,
-      protectedAmountInCents: ctx.protectedAmountInCents,
-      minimumReserveInCents: ctx.minimumReserveInCents,
-      referenceDate: todayIso,
-      horizonDate: horizonIso,
-    });
-
-    const pace = calculateSafeDailyPace({
-      breathingRoomInCents: breathing.breathingRoomInCents,
-      expectedIncomes: ctx.expectedIncomes,
-      referenceDate: todayIso,
-      defaultHorizonDate: horizonIso,
-    });
-
-    const risks = detectUpcomingRisks({
-      currentBalanceInCents: ctx.currentBalanceInCents,
-      expectedIncomes: ctx.expectedIncomes,
-      commitments: ctx.commitments,
-      referenceDate: todayIso,
-      horizonDate: horizonIso,
-    });
-
-    const snapshot: FinancialSnapshot = {
-      referenceDate: todayIso,
-      currentBalanceInCents: ctx.currentBalanceInCents,
-      committedAmountInCents: breathing.committedAmountInCents,
-      protectedAmountInCents: breathing.protectedAmountInCents,
-      breathingRoomInCents: breathing.breathingRoomInCents,
-      safeDailyPaceInCents: pace.safeDailyPaceInCents,
-      nextIncomeDate: pace.nextIncomeDate,
-      projectedBalanceInCents: 0,
-      calculatedAt: nowIso,
-      explanations: [...breathing.explanations, ...pace.explanations],
-    };
-
-    const recommendedAction = buildRecommendedAction(snapshot, risks);
-
-    const severityScore = { critical: 4, high: 3, medium: 2, low: 1 };
-    const sortedRisks = [...risks].sort(
-      (a, b) => severityScore[b.severity] - severityScore[a.severity] || (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)
-    );
-
-    const assumptions: string[] = ["Renda provável e incerta não foram consideradas no cenário principal."];
-    if (formState.reserve.choice === "undecided") assumptions.push("Reserva mínima ainda não foi definida.");
-    if (formState.incomes.length === 0) assumptions.push("Nenhuma renda esperada foi informada.");
-    if (formState.commitments.length === 0) assumptions.push("Nenhum compromisso foi informado.");
-    if (formState.goals.length === 0) assumptions.push("Nenhuma meta protegida foi informada.");
-
-    const ignoredNotes: string[] = [
-      "Esta simulação usa apenas os dados informados aqui — nenhuma movimentação real foi conectada.",
-      ...validation.warnings.map((w) => w.message),
-    ];
-
-    return {
-      status: "ready",
-      blockingMessages: [],
-      dataQuality: normalized.metadata.dataQuality,
-      breathingRoomInCents: breathing.breathingRoomInCents,
-      safeDailyPaceInCents: pace.safeDailyPaceInCents,
-      topRisk: sortedRisks[0] ?? null,
-      recommendedAction,
-      assumptions,
-      ignoredNotes,
-    };
+    return buildPrepareMonthPreview(formState, todayIso, nowIso, horizonIso);
   }, [formState, todayIso, horizonIso]);
 
   return (
