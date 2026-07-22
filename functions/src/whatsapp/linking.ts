@@ -2,6 +2,7 @@ import { createHmac, randomInt } from "node:crypto";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { WHATSAPP_LINK_CODE_SECRET } from "./secrets";
+import { clearPendingCommand } from "./commands";
 
 const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 const LINK_CODES_COLLECTION = "whatsappLinkCodes";
@@ -91,3 +92,77 @@ export async function getLinkedUid(waId: string, db: Firestore): Promise<string 
   if (!snapshot.exists) return null;
   return (snapshot.data() as { uid: string }).uid;
 }
+
+interface WhatsAppLinkRecord {
+  uid: string;
+  linkedAt: string;
+}
+
+/** "5511999999999" -> "****9999" — never expose the full number. */
+export function maskPhoneNumber(waId: string): string {
+  const last4 = waId.slice(-4);
+  return `****${last4}`;
+}
+
+async function findLinkByUid(uid: string, db: Firestore) {
+  const snapshot = await db.collection(LINKS_COLLECTION).where("uid", "==", uid).limit(1).get();
+  return snapshot.empty ? null : snapshot.docs[0];
+}
+
+export interface WhatsAppConnectionStatus {
+  connected: boolean;
+  maskedPhone: string | null;
+  connectedAt: string | null;
+}
+
+/**
+ * Core logic behind getWhatsAppConnectionStatus, independent of the
+ * callable transport so it can be unit tested against the Firestore
+ * emulator without needing to invoke the wrapped onCall handler. Reports
+ * only what the UI needs — never the full phone number, waId, or
+ * anything else internal.
+ */
+export async function resolveConnectionStatus(uid: string, db: Firestore): Promise<WhatsAppConnectionStatus> {
+  const linkDoc = await findLinkByUid(uid, db);
+  if (!linkDoc) {
+    return { connected: false, maskedPhone: null, connectedAt: null };
+  }
+
+  const data = linkDoc.data() as WhatsAppLinkRecord;
+  return { connected: true, maskedPhone: maskPhoneNumber(linkDoc.id), connectedAt: data.linkedAt };
+}
+
+export interface DisconnectWhatsAppResult {
+  disconnected: true;
+}
+
+/**
+ * Core logic behind disconnectWhatsApp: removes the given uid's own
+ * WhatsApp link, looked up strictly by uid — a caller can never reach
+ * another account's link document through this function. Idempotent:
+ * calling it again after the link is already gone still succeeds.
+ */
+export async function performDisconnect(uid: string, db: Firestore): Promise<DisconnectWhatsAppResult> {
+  const linkDoc = await findLinkByUid(uid, db);
+  if (linkDoc) {
+    await linkDoc.ref.delete();
+    await clearPendingCommand(linkDoc.id, db);
+  }
+  return { disconnected: true };
+}
+
+/** Authenticated callable wrapper for resolveConnectionStatus. */
+export const getWhatsAppConnectionStatus = onCall(async (request): Promise<WhatsAppConnectionStatus> => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Faça login para consultar a conexão com o WhatsApp.");
+  }
+  return resolveConnectionStatus(request.auth.uid, getFirestore());
+});
+
+/** Authenticated callable wrapper for performDisconnect. */
+export const disconnectWhatsApp = onCall(async (request): Promise<DisconnectWhatsAppResult> => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Faça login para desconectar o WhatsApp.");
+  }
+  return performDisconnect(request.auth.uid, getFirestore());
+});
