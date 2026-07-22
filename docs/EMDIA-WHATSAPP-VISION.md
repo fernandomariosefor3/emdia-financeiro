@@ -58,12 +58,40 @@ para o WhatsApp.
 - W6: mensagens de voz;
 - W7: lembretes autorizados.
 
-## Estado atual (nesta fase)
+## Estado atual
 
-Implementado: contratos puros em `artifacts/emdia/src/domain/finance/commands`
-(`FinancialCommand`, validação, `canApplyCommand`, `confirmCommand`,
-`rejectCommand`, checagem de duplicidade por `commandId`).
+Implementado:
 
-Não implementado ainda (fases W1 em diante): endpoint, webhook, token,
-integração com Meta/WhatsApp, e qualquer chamada a inteligência artificial
-externa.
+- contratos puros em `artifacts/emdia/src/domain/finance/commands`
+  (`FinancialCommand`, validação, `canApplyCommand`, `confirmCommand`,
+  `rejectCommand`, checagem de duplicidade por `commandId`);
+- MVP funcional do backend em `functions/src/whatsapp/`: webhook do WhatsApp
+  (`whatsappWebhook`), vinculação de conta (`createWhatsAppLinkCode` +
+  `VINCULAR 123456`), interpretação de texto por regras simples (sem IA),
+  sugestão de categoria, fluxo de confirmação SIM/NÃO, e gravação da
+  transação em `users/{uid}/transactions` (schema real, reaproveitado tal
+  como já existia) somente após confirmação explícita;
+- deduplicação por `messageId` do WhatsApp, para que reentregas do webhook
+  (comuns na API da Meta) nunca dupliquem uma transação;
+- todos os segredos (token de acesso, app secret, verify token, phone
+  number id, segredo do código de vinculação) via Firebase Secret Manager —
+  nenhum valor real foi configurado nesta fase.
+
+Não implementado ainda (fases W5 em diante): consultas de Respiro/Ritmo,
+mensagens de voz, lembretes autorizados, e qualquer chamada a inteligência
+artificial externa (o parser é 100% baseado em palavras-chave e regex).
+
+## Checklist operacional (fora do escopo desta fase — apenas para referência)
+
+Para ativar de fato, um operador humano precisa, fora deste repositório:
+
+1. Criar o app e o número de teste no Meta for Developers;
+2. `firebase functions:secrets:set META_WHATSAPP_ACCESS_TOKEN`;
+3. `firebase functions:secrets:set META_WHATSAPP_APP_SECRET`;
+4. `firebase functions:secrets:set META_WHATSAPP_VERIFY_TOKEN`;
+5. `firebase functions:secrets:set META_WHATSAPP_PHONE_NUMBER_ID`;
+6. `firebase functions:secrets:set WHATSAPP_LINK_CODE_SECRET`;
+7. Configurar a URL do `whatsappWebhook` implantado como webhook no painel
+   da Meta, usando o mesmo `META_WHATSAPP_VERIFY_TOKEN`.
+
+Nenhum desses comandos foi executado nesta fase.
