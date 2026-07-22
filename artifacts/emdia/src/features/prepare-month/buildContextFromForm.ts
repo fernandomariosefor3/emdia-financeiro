@@ -35,6 +35,18 @@ export function parseReaisInputToCents(raw: string): number | null {
   return realsToCents(reais);
 }
 
+/**
+ * Inverse of parseReaisInputToCents — formats cents back into the editable
+ * "1234,56" input format (not the currency-formatted formatMoney output).
+ */
+export function centsToReaisInputText(cents: number): string {
+  const sign = cents < 0 ? "-" : "";
+  const absCents = Math.abs(cents);
+  const reais = Math.floor(absCents / 100);
+  const remainderCents = absCents % 100;
+  return `${sign}${reais},${String(remainderCents).padStart(2, "0")}`;
+}
+
 const CONFIDENCE_MAP: Record<IncomeConfidenceLabel, ExpectedIncome["confidence"]> = {
   certain: "confirmed",
   probable: "probable",

@@ -27,13 +27,29 @@ export interface MonthPreviewData {
   ignoredNotes: string[];
 }
 
+export type PrepareMonthSaveStatus = "idle" | "saving" | "success" | "error";
+
 interface MonthPreviewStepProps {
   preview: MonthPreviewData;
   onRestart: () => void;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  canSave: boolean;
+  saveStatus: PrepareMonthSaveStatus;
+  saveErrorMessage: string | null;
+  onSave: () => void;
+  onRetrySave: () => void;
 }
 
-export function MonthPreviewStep({ preview, onRestart, headingRef }: MonthPreviewStepProps) {
+export function MonthPreviewStep({
+  preview,
+  onRestart,
+  headingRef,
+  canSave,
+  saveStatus,
+  saveErrorMessage,
+  onSave,
+  onRetrySave,
+}: MonthPreviewStepProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -41,7 +57,7 @@ export function MonthPreviewStep({ preview, onRestart, headingRef }: MonthPrevie
           Veja como seu mês pode ficar
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
-          Esta é uma simulação. Nada será salvo.
+          {canSave ? "Revise os valores antes de confirmar." : "Esta é uma simulação. Nada será salvo."}
         </p>
       </div>
 
@@ -123,6 +139,37 @@ export function MonthPreviewStep({ preview, onRestart, headingRef }: MonthPrevie
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {canSave && preview.status === "ready" && (
+        <div className="border rounded-lg p-4 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Salvar planejamento</p>
+
+          {saveStatus === "success" && (
+            <p role="status" aria-live="polite" className="text-sm font-medium">
+              Seu planejamento foi salvo.
+            </p>
+          )}
+
+          {saveStatus === "error" && (
+            <p role="alert" aria-live="polite" className="text-sm text-destructive">
+              {saveErrorMessage ?? "Não foi possível salvar agora. Seus dados continuam nesta tela."}
+            </p>
+          )}
+
+          <Button
+            type="button"
+            onClick={saveStatus === "error" ? onRetrySave : onSave}
+            disabled={saveStatus === "saving"}
+            aria-busy={saveStatus === "saving"}
+          >
+            {saveStatus === "saving"
+              ? "Salvando..."
+              : saveStatus === "error"
+                ? "Tentar novamente"
+                : "Salvar meu planejamento"}
+          </Button>
         </div>
       )}
 

@@ -7,6 +7,9 @@ import { PrepareMonthFormState, PREPARE_MONTH_SCREENS } from "./types";
 import { createInitialPrepareMonthState } from "./initialState";
 import { parseReaisInput, parseReaisInputToCents } from "./buildContextFromForm";
 import { buildPrepareMonthPreview } from "./buildPrepareMonthPreview";
+import { buildFormFromContext } from "./buildFormFromContext";
+import { buildValidatedContext } from "./buildValidatedContext";
+import { usePrepareMonthPersistence } from "./data/usePrepareMonthPersistence";
 import { PrepareMonthProgress } from "./components/PrepareMonthProgress";
 import { ReferenceBalanceStep, ReferenceBalanceStepErrors } from "./components/ReferenceBalanceStep";
 import { ReserveStep, ReserveStepErrors } from "./components/ReserveStep";
@@ -91,6 +94,9 @@ export function PrepareMonthWizard() {
   const [screenIndex, setScreenIndex] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const hasPrefilledRef = useRef(false);
+
+  const persistence = usePrepareMonthPersistence();
 
   const currentScreen = PREPARE_MONTH_SCREENS[screenIndex];
   const todayIso = format(new Date(), "yyyy-MM-dd");
@@ -99,6 +105,25 @@ export function PrepareMonthWizard() {
   useEffect(() => {
     headingRef.current?.focus();
   }, [screenIndex]);
+
+  // Prefill once with the saved context when the wizard opens for an
+  // authenticated user — never overwrites in-progress edits afterwards.
+  useEffect(() => {
+    if (persistence.loadStatus === "loaded" && persistence.savedDocument && !hasPrefilledRef.current) {
+      hasPrefilledRef.current = true;
+      setFormState(buildFormFromContext(persistence.savedDocument));
+    }
+  }, [persistence.loadStatus, persistence.savedDocument]);
+
+  function handleSave() {
+    const result = buildValidatedContext(formState, todayIso, new Date().toISOString());
+    if (result.status !== "ready") return;
+    void persistence.save(result.document);
+  }
+
+  function handleRetrySave() {
+    void persistence.retrySave();
+  }
 
   const balanceErrors = validateBalanceScreen(formState, todayIso);
   const reserveErrors = validateReserveScreen(formState);
@@ -186,7 +211,16 @@ export function PrepareMonthWizard() {
         />
       )}
       {currentScreen === "preview" && (
-        <MonthPreviewStep preview={preview} onRestart={handleRestart} headingRef={headingRef} />
+        <MonthPreviewStep
+          preview={preview}
+          onRestart={handleRestart}
+          headingRef={headingRef}
+          canSave={persistence.canPersist}
+          saveStatus={persistence.saveStatus}
+          saveErrorMessage={persistence.saveErrorMessage}
+          onSave={handleSave}
+          onRetrySave={handleRetrySave}
+        />
       )}
 
       <div className="flex justify-between pt-4 border-t">
