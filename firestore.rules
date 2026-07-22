@@ -81,6 +81,71 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
+    // ── Contexto financeiro ("Prepare seu mês") ─────────────────────────────────
+    // Valida apenas o que as regras conseguem expressar de forma atômica por
+    // documento (campos de topo, tamanhos de lista, tipos). Validação de cada
+    // item dentro de expectedIncomes/recurringCommitments/protectedGoals
+    // continua sendo feita no cliente por validateFinancialContextDocument
+    // antes de qualquer gravação — as Rules não suportam laços sobre arrays.
+
+    function isValidFinancialContextMetadata(metadata) {
+      return metadata is map
+        && metadata.schemaVersion == 1
+        && metadata.revision is int
+        && metadata.revision >= 1
+        && metadata.createdAt is string
+        && metadata.updatedAt is string
+        && metadata.lastConfirmedAt is string
+        && metadata.source is string
+        && metadata.dataQuality in ['complete', 'partial', 'insufficient', 'stale'];
+    }
+
+    function isValidFinancialContextDocument(data) {
+      let topLevelOk = data.keys().hasOnly([
+        'schemaVersion', 'metadata', 'profile', 'calculationPreferences',
+        'referenceBalance', 'minimumReserve', 'expectedIncomes',
+        'recurringCommitments', 'protectedGoals'
+      ]);
+      let requiredOk = data.keys().hasAll([
+        'schemaVersion', 'metadata', 'profile', 'calculationPreferences',
+        'minimumReserve', 'expectedIncomes', 'recurringCommitments', 'protectedGoals'
+      ]);
+      let schemaOk = data.schemaVersion == 1;
+      let metadataOk = isValidFinancialContextMetadata(data.metadata);
+      let profileOk = data.profile is map;
+      let prefsOk = data.calculationPreferences is map;
+      let incomesOk = data.expectedIncomes is list && data.expectedIncomes.size() <= 50;
+      let commitmentsOk = data.recurringCommitments is list && data.recurringCommitments.size() <= 100;
+      let goalsOk = data.protectedGoals is list && data.protectedGoals.size() <= 20;
+      let referenceBalanceOk = !data.keys().hasAny(['referenceBalance'])
+        || data.referenceBalance.amountInCents is int;
+      let reserveOk = data.minimumReserve.status in ['missing', 'configured']
+        && (data.minimumReserve.status == 'missing' || data.minimumReserve.amountInCents is int);
+
+      return topLevelOk && requiredOk && schemaOk && metadataOk && profileOk && prefsOk
+        && incomesOk && commitmentsOk && goalsOk && referenceBalanceOk && reserveOk;
+    }
+
+    match /users/{userId}/financialContext/current {
+      allow read: if isOwner(userId);
+
+      // Criação: primeira revisão apenas.
+      allow create: if isOwner(userId)
+                    && isValidFinancialContextDocument(request.resource.data)
+                    && request.resource.data.metadata.revision == 1;
+
+      // Atualização: revisão precisa avançar exatamente +1 sobre o valor já
+      // salvo (Firestore avalia resource.data de forma atômica por
+      // documento, então isso protege contra sobrescrita silenciosa sem
+      // precisar de uma transaction no cliente) e createdAt é imutável.
+      allow update: if isOwner(userId)
+                    && isValidFinancialContextDocument(request.resource.data)
+                    && request.resource.data.metadata.revision == resource.data.metadata.revision + 1
+                    && request.resource.data.metadata.createdAt == resource.data.metadata.createdAt;
+
+      allow delete: if false;
+    }
+
     // ── Mensagens de contato ───────────────────────────────────────────────────
 
     match /contact_messages/{docId} {

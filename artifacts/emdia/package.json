@@ -13,9 +13,11 @@
     "test:today-data": "vitest run src/features/today/data/__tests__",
     "test:financial-context": "tsx --test src/domain/finance/context/__tests__/*.test.ts",
     "test:prepare-month": "vitest run src/features/prepare-month/__tests__",
-    "test:financial-context-persistence": "vitest run src/features/prepare-month/data/__tests__"
+    "test:financial-context-persistence": "vitest run src/features/prepare-month/data/__tests__",
+    "test:firestore-rules": "firebase emulators:exec --only firestore \"tsx --test src/firestore-rules/*.test.ts\""
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.4",
     "@radix-ui/react-alert-dialog": "^1.1.7",
