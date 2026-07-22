@@ -15,7 +15,8 @@
     "test:prepare-month": "vitest run src/features/prepare-month/__tests__",
     "test:financial-context-persistence": "vitest run src/features/prepare-month/data/__tests__",
     "test:financial-commands": "tsx --test src/domain/finance/commands/__tests__/*.test.ts",
-    "test:firestore-rules": "firebase emulators:exec --only firestore \"tsx --test src/firestore-rules/*.test.ts\""
+    "test:firestore-rules": "firebase emulators:exec --only firestore \"tsx --test src/firestore-rules/*.test.ts\"",
+    "test:whatsapp-link": "vitest run src/features/whatsapp-link/__tests__"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
