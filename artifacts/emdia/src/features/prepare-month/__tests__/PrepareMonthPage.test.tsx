@@ -12,6 +12,14 @@ vi.mock("@/lib/auth-context", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+vi.mock("firebase/firestore", () => ({
+  doc: vi.fn(),
+  getDoc: vi.fn(() => Promise.resolve({ exists: () => false })),
+  setDoc: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock("@/lib/firebase", () => ({ db: {} }));
+
 const mockedUseAuth = vi.mocked(useAuth);
 
 function authenticated() {
@@ -78,6 +86,7 @@ describe("PrepareMonthPreview (Feature Flag e Proteção — 1 a 3)", () => {
 describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
+    mockedUseAuth.mockReturnValue(unauthenticated());
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-21T12:00:00"));
   });

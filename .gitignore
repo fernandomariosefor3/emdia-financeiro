@@ -51,4 +51,9 @@ Thumbs.db
 
 # Replit
 .cache/
+
+# Firebase emulators
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 .local/
