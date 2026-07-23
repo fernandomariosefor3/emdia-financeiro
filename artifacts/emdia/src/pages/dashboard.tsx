@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { PrepareMonthEntryCard } from "@/features/prepare-month";
 
 // ==========================================
 // COMPONENTES DE IA EMBUTIDOS
@@ -494,6 +495,8 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          <PrepareMonthEntryCard />
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
             <h3 className="font-extrabold text-[#0A0F1E]">Atalhos Rápidos</h3>

@@ -22,7 +22,7 @@ export function ReferenceBalanceStep({ value, onChange, todayIso, errors, headin
     <div className="space-y-6">
       <div>
         <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          Seu ponto de partida
+          Seu saldo
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Informe quanto você tinha disponível nesta data. Usaremos esse valor como ponto de
