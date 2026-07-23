@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { TrendingUp, Wallet, TrendingDown, BellDot, BarChart2, Sparkles, FileDown } from "lucide-react";
+import { TrendingUp, MessageCircle, Zap, ShieldCheck, PiggyBank, TrendingDown, BellDot, BarChart2, Sparkles, FileDown } from "lucide-react";
 import { db } from "../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
@@ -51,46 +51,43 @@ const pieData = [
 const steps = [
   {
     num: "01",
-    title: "Registre suas finanças",
-    desc: "Adicione suas receitas, despesas e dívidas em poucos segundos. Escolha a categoria, valor e data — simples assim, sem complicação.",
-    tags: ["Receitas", "Despesas", "Dívidas"],
+    title: "Mande uma mensagem no WhatsApp",
+    desc: "Cadastre-se uma vez no app e vincule ao WhatsApp. A partir daí, é só mandar uma mensagem. Sem abrir outro app, sem complicação.",
+    tags: ["Cadastro único", "WhatsApp", "IA Lia"],
     mockup: [
-      { label: "Salário", value: "+ R$ 3.500", color: "text-[#1AC87E]", icon: "↑" },
-      { label: "Aluguel", value: "- R$ 900", color: "text-red-400", icon: "↓" },
-      { label: "Cartão", value: "- R$ 450", color: "text-orange-400", icon: "💳" },
+      { label: "Você", value: "Quanto gastei em compras esse mês?", color: "text-blue-400", icon: "💬" },
+      { label: "Lia", value: "Você gastou R$ 847 em compras. Sua média é R$ 620. Cuidado, tá acima do normal!", color: "text-[#1AC87E]", icon: "🤖" },
     ],
   },
   {
     num: "02",
-    title: "Veja o gráfico em tempo real",
-    desc: "O app gera automaticamente gráficos da sua situação financeira do mês, sempre atualizados. Visualize receitas, despesas e dívidas de forma clara.",
-    tags: ["Gráficos", "Tempo real", "Categorias"],
+    title: "Consulte sua situação em segundos",
+    desc: "Pergunte qualquer coisa: quanto sobrou, quanto pode gastar, como está cada categoria. A Lia responde com os dados reais da sua conta.",
+    tags: ["Consultas", "Tempo real", "Por categoria"],
     mockup: [
-      { label: "Receitas", value: "R$ 3.500", color: "text-[#1AC87E]", icon: "📈" },
-      { label: "Despesas", value: "R$ 1.350", color: "text-red-400", icon: "📉" },
-      { label: "Saldo", value: "+ R$ 2.150", color: "text-blue-400", icon: "💰" },
+      { label: "Você", value: "Posso comprar um celular de R$ 2.000?", color: "text-blue-400", icon: "💬" },
+      { label: "Lia", value: "Sim! Você tem R$ 3.200 disponíveis. Comprando agora, ainda sobram R$ 1.200.", color: "text-[#1AC87E]", icon: "🤖" },
     ],
   },
   {
     num: "03",
-    title: "Tome decisões inteligentes",
-    desc: "Com histórico completo, alertas automáticos e a IA Lia ao seu lado, você tem tudo para controlar suas finanças com clareza total.",
-    tags: ["IA Lia", "Alertas", "Histórico"],
+    title: "Planeje e seja alertado automaticamente",
+    desc: "Todo início de mês, a Lia monta seu resumo planejado versus realizado. E avisa antes de você extrapolar — no WhatsApp, na hora.",
+    tags: ["Planejamento mensal", "Alertas", "Proatividade"],
     mockup: [
-      { label: "Meta do mês", value: "87% atingida", color: "text-[#1AC87E]", icon: "🎯" },
-      { label: "Alerta", value: "Cartão vence em 3d", color: "text-orange-400", icon: "🔔" },
-      { label: "Sugestão IA", value: "Economize R$ 200", color: "text-blue-400", icon: "🤖" },
+      { label: "Lia", value: "📊 Resumo de Junho: Planejou R$ 1.500 em alimentação, gastou R$ 1.780. Cuidado!", color: "text-[#1AC87E]", icon: "🔔" },
+      { label: "Lia", value: "💡 Dica: Tenta cozinhar mais em casa essa semana. Você pode economizar R$ 120.", color: "text-[#1AC87E]", icon: "🤖" },
     ],
   },
 ];
 
 const features = [
-  { Icon: Wallet, color: "#1AC87E", title: "Controle de Receitas", desc: "Registre todas as suas entradas e acompanhe o crescimento da sua renda mês a mês." },
-  { Icon: TrendingDown, color: "#EF4444", title: "Gestão de Despesas", desc: "Categorize gastos automaticamente e descubra onde seu dinheiro está indo." },
-  { Icon: BellDot, color: "#F59E0B", title: "Controle de Dívidas", desc: "Alertas automáticos para vencimentos. Nunca mais pague juros por esquecimento." },
-  { Icon: BarChart2, color: "#3B82F6", title: "Relatórios Visuais", desc: "Gráficos em tempo real que mostram sua saúde financeira de forma clara e intuitiva." },
-  { Icon: Sparkles, color: "#8B5CF6", title: "IA Financeira — Lia", desc: "Sua assistente pessoal de finanças que aprende com seu perfil e dá sugestões inteligentes." },
-  { Icon: FileDown, color: "#10B981", title: "Exportação de Dados", desc: "Exporte todo o histórico em CSV para análise em planilhas. Disponível no plano Pro." },
+  { Icon: MessageCircle, color: "#25D366", title: "Assessoria pelo WhatsApp", desc: "Consulte saldos, gastos por categoria e muito mais — respondendo mensagens como uma amiga que entende de dinheiro." },
+  { Icon: Zap, color: "#1AC87E", title: "Respostas em segundos", desc: "A Lia busca seus dados em tempo real e responde na hora. Sem navegar em menus, sem abrir planilhas." },
+  { Icon: PiggyBank, color: "#3B82F6", title: "Simule antes de comprar", desc: "Mande 'posso comprar X por R$ Y?' e a Lia calcula na hora se cabe no seu orçamento, considerando tudo que você já gastou." },
+  { Icon: TrendingDown, color: "#EF4444", title: "Alertas proativos", desc: "A Lia te avisa antes de você extrapolar. Se suas despesas já superaram o planejado, você fica sabendo na mesma hora." },
+  { Icon: BarChart2, color: "#8B5CF6", title: "Resumo planejado vs. realizado", desc: "Todo mês, compare o que você planejou com o que realmente aconteceu — com breakdown por categoria." },
+  { Icon: ShieldCheck, color: "#10B981", title: "Dados seguros", desc: "Suas informações financeiras ficam criptografadas e nunca são compartilhadas. Segurança bancária no bolso." },
 ];
 
 const testimonials = [
@@ -103,14 +100,14 @@ const testimonials = [
 ];
 
 const faqs = [
-  { q: "O plano gratuito tem limite de uso?", a: "Sim. No plano gratuito você pode registrar até 15 transações por mês e visualizar os últimos 30 dias de histórico." },
-  { q: "Como funciona o gráfico de pizza?", a: "Assim que você registrar suas receitas, despesas e dívidas, o app gera automaticamente um gráfico mostrando sua situação financeira do mês em tempo real." },
+  { q: "Como a Lia responde no WhatsApp?", a: "Após o cadastro no app, vincule seu número ao WhatsApp. A partir daí, é só mandar uma mensagem e a Lia responde com base nos seus dados financeiros reais." },
+  { q: "Que tipo de pergunta posso fazer?", a: "Você pode perguntar de tudo: 'quanto gastei em alimentação?', 'posso comprar isso?', 'como está meu saldo?', 'estou no vermelho?'. A Lia interpreta e busca a resposta com seus dados reais." },
+  { q: "Preciso instalar o app ou o WhatsApp Business?", a: "Você precisa do app emdia para cadastrar suas transações e vincular ao WhatsApp. Depois disso, toda interação acontece direto no WhatsApp — sem precisar abrir o app." },
   { q: "Posso cancelar a qualquer momento?", a: "Sim, sem burocracia. Se você assinar o plano mensal, pode cancelar quando quiser e continua com acesso até o fim do período pago. No plano anual, oferecemos 7 dias de garantia total." },
-  { q: "Preciso instalar alguma coisa?", a: "Não! O emdia roda direto no navegador do seu celular ou computador. Não ocupa espaço no seu dispositivo e está sempre atualizado." },
   { q: "Meus dados financeiros ficam seguros?", a: "Com certeza. Os dados são criptografados, ficam salvos na nuvem de forma segura e nunca são compartilhados com terceiros." },
-  { q: "Como é feito o pagamento?", a: "Aceitamos cartão de crédito, débito e Pix. O pagamento é processado de forma segura pelo Stripe." },
-  { q: "O emdia funciona no celular?", a: "Sim! O emdia é totalmente responsivo e funciona perfeitamente em qualquer dispositivo — celular, tablet ou computador — sem precisar instalar nada." },
-  { q: "O emdia ajuda no controle de dívidas?", a: "Sim! O emdia possui um módulo completo de gestão de dívidas com alertas automáticos para vencimentos, ajudando você a evitar juros." },
+  { q: "A Lia funciona offline?", a: "A Lia precisa estar online para consultar seus dados em tempo real. Mas você pode registrar transações offline pelo app, e a Lia as considera quando responder sua próxima mensagem." },
+  { q: "Como funciona o resumo mensal?", a: "Todo início de mês, a Lia monta um relatório comparing o que você planejou com o que realmente aconteceu — enviado automaticamente no WhatsApp. Você vê onde acertou e onde pode melhorar." },
+  { q: "Como a Lia sabe quanto eu posso gastar?", a: "A Lia analisa todas as suas receitas e despesas já registradas. Com base nisso, calcula quanto você tem disponível no mês, quanto já gastou por categoria e quanto ainda cabe no orçamento." },
 ];
 
 /* ─── NAVBAR ──────────────────────────────────────────────────────── */
@@ -198,28 +195,29 @@ function Hero() {
 
       <div className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-24 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1AC87E]/15 border border-[#1AC87E]/30 text-[#1AC87E] text-sm font-semibold mb-8">
-          <span className="w-2 h-2 rounded-full bg-[#1AC87E] animate-pulse" />
-          CONTROLE FINANCEIRO INTELIGENTE
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25D366]/15 border border-[#25D366]/30 text-[#25D366] text-sm font-semibold mb-8">
+          <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+          SUA ASSESSORA FINANCEIRA NO WHATSAPP
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white leading-tight max-w-3xl">
-          Seu dinheiro,{" "}
-          <span className="text-[#1AC87E]">sob controle</span>
+          Finanças sem<br />
+          <span className="text-[#1AC87E]">planilha —</span> só no<br />
+          WhatsApp
         </motion.h1>
 
         <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-lg text-white/75 max-w-xl leading-relaxed">
-          O emdia é a plataforma definitiva para gerenciar suas finanças pessoais
-          com simplicidade, inteligência e clareza — tudo em um só lugar.
+          A Lia é sua assessora financeira pessoal. Ela responde no WhatsApp,
+          mostra seu saldo real, alerta antes de você extrapolar — e cabe no bolso.
         </motion.p>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <a href={APP_URL}
             className="px-8 py-4 rounded-full bg-[#1AC87E] text-white font-bold text-base hover:bg-[#15a368] transition-all shadow-xl shadow-[#1AC87E]/30 flex items-center gap-2">
-            🔒 Começar grátis
+            💬 Começar no WhatsApp
           </a>
           <a href="#como-funciona"
             className="px-8 py-4 rounded-full bg-white/10 text-white font-bold text-base hover:bg-white/20 transition-all border border-white/25">
@@ -227,48 +225,66 @@ function Hero() {
           </a>
         </motion.div>
 
-        {/* Dashboard card mockup */}
+        {/* WhatsApp chat mockup */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-14 relative w-full max-w-xs mx-auto"
+          className="mt-14 relative w-full max-w-sm mx-auto"
         >
-          <div className="bg-white/8 backdrop-blur-xl border border-white/12 rounded-3xl p-5 text-left shadow-2xl shadow-black/40">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-white/55 text-xs font-medium">Saldo do mês</span>
-              <span className="text-[10px] text-[#1AC87E] bg-[#1AC87E]/15 px-2.5 py-0.5 rounded-full font-bold tracking-wide">+12% ↑</span>
-            </div>
-            <div className="text-[1.6rem] font-extrabold text-white mb-4 tracking-tight">R$ 2.847,00</div>
-            <div className="space-y-2.5 mb-4">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white/45 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#1AC87E] flex-shrink-0" />Receitas
-                </span>
-                <span className="text-[#1AC87E] font-bold">R$ 4.500</span>
+          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-black/50 text-left">
+            {/* WhatsApp header */}
+            <div className="bg-[#0A0F1E] px-5 py-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#1AC87E] flex items-center justify-center">
+                <span className="text-white font-black text-sm">L</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white/45 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />Despesas
-                </span>
-                <span className="text-red-400 font-bold">R$ 1.653</span>
+              <div>
+                <div className="text-white font-semibold text-sm">Lia — emdia</div>
+                <div className="text-white/40 text-xs">online</div>
               </div>
             </div>
-            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full w-[63%] bg-gradient-to-r from-[#1AC87E] to-[#0fa85f] rounded-full" />
-            </div>
-            <div className="mt-1.5 flex justify-between text-[10px] text-white/25">
-              <span>Meta mensal</span><span>63%</span>
+            {/* Chat body */}
+            <div className="bg-[#ECE5DD] p-4 space-y-3 min-h-[200px]">
+              {/* User message */}
+              <div className="flex justify-end">
+                <div className="bg-[#DCF8C6] rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[75%] shadow-sm">
+                  <div className="text-[#0A0F1E] text-xs font-medium">Posso comprar um tênis de R$ 450?</div>
+                </div>
+              </div>
+              {/* Lia response */}
+              <div className="flex justify-start">
+                <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[75%] shadow-sm">
+                  <div className="text-[#0A0F1E] text-xs leading-relaxed">
+                    Sim! 💳 Você tem <span className="font-bold text-[#1AC87E]">R$ 1.840 disponíveis</span> esse mês.
+                    Comprando o tênis, ainda sobram R$ 1.390. Pode comprar, sim! 👟
+                  </div>
+                </div>
+              </div>
+              {/* User message 2 */}
+              <div className="flex justify-end">
+                <div className="bg-[#DCF8C6] rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[75%] shadow-sm">
+                  <div className="text-[#0A0F1E] text-xs font-medium">E quanto gastei em alimentação?</div>
+                </div>
+              </div>
+              {/* Lia response 2 */}
+              <div className="flex justify-start">
+                <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[75%] shadow-sm">
+                  <div className="text-[#0A0F1E] text-xs leading-relaxed">
+                    Em Junho, você gastou <span className="font-bold text-red-400">R$ 780 em alimentação</span> — R$ 220 acima do planejado (R$ 560). ⚠️
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
           {/* Floating badge */}
           <motion.div
             animate={{ y: [-5, 5, -5] }}
             transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-            className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-2xl px-3 py-2 flex items-center gap-2"
+            className="absolute -top-4 -right-4 bg-[#25D366] rounded-2xl shadow-2xl px-3 py-2 flex items-center gap-2"
           >
-            <span className="w-2 h-2 rounded-full bg-[#1AC87E] flex-shrink-0" />
-            <span className="text-xs font-bold text-[#0A0F1E] whitespace-nowrap">Meta quase lá! 🎯</span>
+            <span className="text-base">💬</span>
+            <span className="text-white text-xs font-bold whitespace-nowrap">Resposta instantânea</span>
           </motion.div>
         </motion.div>
       </div>
@@ -277,8 +293,8 @@ function Hero() {
       <div ref={statsRef} className="relative bg-white py-10 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 grid grid-cols-3 gap-4 text-center">
           {[
-            { value: `${users >= 10000 ? "10k" : users}+`, label: "Usuários ativos" },
-            { value: `R$ ${money}M+`, label: "Gerenciados" },
+            { value: `${users >= 10000 ? "10k" : users}+`, label: "Usuários assessorados" },
+            { value: `R$ ${money}M+`, label: "Gerenciados via WhatsApp" },
             { value: `${satisfaction}%`, label: "Satisfação" },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1 }}>
@@ -303,9 +319,9 @@ function HowItWorks() {
       <div className="max-w-6xl mx-auto px-4">
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"} className="text-center mb-16">
           <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Como funciona</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-[#0A0F1E]">Do caos financeiro à clareza total</motion.h2>
+          <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-[#0A0F1E]">Assessoria financeira sem complicação</motion.h2>
           <motion.p variants={fadeUp} className="mt-4 text-gray-500 text-lg max-w-xl mx-auto">
-            Em menos de 2 minutos você já tem uma visão completa das suas finanças. Sem planilha, sem complicação.
+            Cadastre-se uma vez, use para sempre. A Lia vive no seu WhatsApp — pronta para te ajudar sempre que você precisar.
           </motion.p>
         </motion.div>
 
@@ -397,9 +413,9 @@ function Features() {
     <section id="funcionalidades" ref={ref} className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"} className="text-center mb-16">
-          <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Funcionalidades</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-[#0A0F1E]">Tudo que você precisa</motion.h2>
-          <motion.p variants={fadeUp} className="mt-4 text-gray-500 text-lg max-w-xl mx-auto">Ferramentas poderosas em uma interface simples e bonita.</motion.p>
+          <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Recursos</motion.p>
+          <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-[#0A0F1E]">Assessoria completa, sem complicação</motion.h2>
+          <motion.p variants={fadeUp} className="mt-4 text-gray-500 text-lg max-w-xl mx-auto">Tudo que uma boa assessora financeira faz — no WhatsApp, ao seu alcance.</motion.p>
         </motion.div>
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
@@ -428,12 +444,12 @@ function DemoChart() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"}>
-            <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Visualização em tempo real</motion.p>
+            <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Assessoria proativa</motion.p>
             <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-white leading-tight">
-              Veja sua situação financeira <span className="text-[#1AC87E]">de verdade</span>
+              A Lia te avisa <span className="text-[#1AC87E]">antes</span> de você extrapolar
             </motion.h2>
             <motion.p variants={fadeUp} className="mt-5 text-white/60 text-lg leading-relaxed">
-              Gráficos automáticos que mostram receitas, despesas e dívidas em uma visão clara e intuitiva. Sem planilhas complicadas.
+              Não precisa ficar abrindo o app para verificar. A Lia acompanha suas finanças e te manda um alerta no WhatsApp quando algo precisa de atenção.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 grid grid-cols-3 gap-4">
               {[
@@ -805,21 +821,21 @@ function CTA() {
     <section ref={ref} className="py-24 bg-[#0A0F1E]">
       <div className="max-w-4xl mx-auto px-4 text-center">
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"}>
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1AC87E]/10 border border-[#1AC87E]/20 text-[#1AC87E] text-sm font-semibold mb-8">
-            <span className="w-2 h-2 rounded-full bg-[#1AC87E] animate-pulse" />
-            Mais de 10.000 usuários ativos
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-semibold mb-8">
+            <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+            Sua assessora no WhatsApp, sempre disponível
           </motion.div>
           <motion.h2 variants={fadeUp} className="text-4xl sm:text-6xl font-extrabold text-white leading-tight">
-            Comece a controlar suas<br />
-            <span className="text-[#1AC87E]">finanças hoje mesmo</span>
+            Converse com suas<br />
+            <span className="text-[#1AC87E]">finanças agora</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="mt-6 text-white/60 text-lg max-w-xl mx-auto">
-            É grátis para sempre. Upgrade apenas quando precisar de mais.
+            Cadastro gratuito. Sem compromisso. A Lia te espera no WhatsApp.
           </motion.p>
           <motion.div variants={fadeUp} className="mt-10">
             <a href={APP_URL}
               className="inline-block px-10 py-4 rounded-2xl bg-[#1AC87E] text-white font-bold text-lg hover:bg-[#15a368] transition-all shadow-2xl shadow-[#1AC87E]/40 hover:-translate-y-0.5">
-              🔒 Criar conta grátis
+              💬 Falar com a Lia
             </a>
           </motion.div>
           <motion.p variants={fadeUp} className="mt-4 text-white/30 text-sm">Sem cartão de crédito • Cancele quando quiser</motion.p>

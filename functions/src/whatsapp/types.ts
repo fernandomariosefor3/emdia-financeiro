@@ -43,3 +43,25 @@ export interface WhatsAppSendConfig {
 }
 
 export type SendWhatsAppTextMessage = (waId: string, body: string, config: WhatsAppSendConfig) => Promise<void>;
+
+// ─────────────────────────────────────────────
+// TIPOS DE CONSULTA (W5)
+// ─────────────────────────────────────────────
+
+export interface ParsedSimulateIntent {
+  kind: "simulate";
+  amountInCents: number;
+  description: string;
+  paymentMethod: "cash" | "installments";
+  installments: number;
+}
+
+export interface ParsedQueryIntent {
+  kind: "query";
+}
+
+export type ParsedWhatsAppIntent =
+  | { kind: "transaction"; data: ParsedTransactionIntent }
+  | { kind: "query" }
+  | ParsedSimulateIntent
+  | null;

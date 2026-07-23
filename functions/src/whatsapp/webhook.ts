@@ -10,12 +10,24 @@ import {
 } from "./secrets";
 import { isValidMetaSignature } from "./signature";
 import { verifyWebhookSubscription } from "./verification";
-import { parseTransactionIntent } from "./parser";
+import { parseTransactionIntent, parseQueryIntent } from "./parser";
 import { suggestCategory } from "./categories";
 import { consumeLinkCode, ConsumeLinkCodeResult, getLinkedUid } from "./linking";
 import { getPendingCommand, savePendingCommand, clearPendingCommand, confirmPendingCommand, interpretReply } from "./commands";
 import { sendWhatsAppTextMessage } from "./sendMessage";
-import { InboundWhatsAppMessage, PendingWhatsAppCommand, SendWhatsAppTextMessage, WebhookInboundEvent, WhatsAppSendConfig } from "./types";
+import {
+  InboundWhatsAppMessage,
+  PendingWhatsAppCommand,
+  SendWhatsAppTextMessage,
+  WebhookInboundEvent,
+  WhatsAppSendConfig,
+} from "./types";
+import {
+  getFinancialPulse,
+  buildSimulation,
+  formatPulseResponse,
+  formatSimulationResponse,
+} from "./queries";
 
 const PROCESSED_MESSAGES_COLLECTION = "whatsappProcessedMessages";
 const LINK_COMMAND_PATTERN = /^vincular\s+(\d{6})$/i;
@@ -72,6 +84,13 @@ export async function markMessageProcessed(messageId: string, db: Firestore): Pr
 function todayCivilDate(timestampSeconds: number): string {
   const millis = Number.isFinite(timestampSeconds) ? timestampSeconds * 1000 : Date.now();
   return new Date(millis).toISOString().slice(0, 10);
+}
+
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 const LINK_REPLY_MESSAGES: Record<ConsumeLinkCodeResult["status"], string> = {
@@ -146,18 +165,66 @@ async function handleConfirmationReply(
   await send(pending.waId, "Não entendi. Responda SIM para confirmar ou NÃO para cancelar.", config);
 }
 
+/**
+ * W5: Trata intenções de consulta (respiro, ritmo, simulação).
+ * Estas mensagens NÃO criam transações — apenas consultam e respondem.
+ */
+async function handleQueryMessage(
+  input: { uid: string; waId: string; text: string },
+  db: Firestore,
+  config: WhatsAppSendConfig,
+  send: SendWhatsAppTextMessage
+): Promise<void> {
+  const queryIntent = parseQueryIntent(input.text);
+
+  if (!queryIntent) return;
+
+  if (queryIntent.kind === "simulate") {
+    // ── Simulação de compra ──
+    const pulse = await getFinancialPulse(input.uid, db);
+    const firstDueDate = queryIntent.paymentMethod === "cash"
+      ? todayCivilDate(Date.now() / 1000)
+      : formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+
+    const sim = buildSimulation(pulse, {
+      purchaseAmountInCents: queryIntent.amountInCents,
+      paymentMethod: queryIntent.paymentMethod,
+      installments: queryIntent.installments,
+      firstDueDate,
+      description: queryIntent.description,
+    });
+
+    const response = formatSimulationResponse(pulse, sim, queryIntent.description);
+    await send(input.waId, response, config);
+    return;
+  }
+
+  // ── Consulta pura de respiro ──
+  const pulse = await getFinancialPulse(input.uid, db);
+  const response = formatPulseResponse(pulse);
+  await send(input.waId, response, config);
+}
+
 async function handleNewTransactionMessage(
   input: { uid: string; waId: string; text: string; messageId: string; timestampSeconds: number },
   db: Firestore,
   config: WhatsAppSendConfig,
   send: SendWhatsAppTextMessage
 ): Promise<void> {
+  // Primeiro: verifica se é uma intenção de consulta (W5)
+  const queryIntent = parseQueryIntent(input.text);
+  if (queryIntent) {
+    await handleQueryMessage(input, db, config, send);
+    return;
+  }
+
+  // Segundo: parsing de transação
   const intent = parseTransactionIntent(input.text);
 
   if (!intent) {
     await send(
       input.waId,
-      'Não entendi o valor ou o tipo. Tente algo como: "Gastei 38 no mercado" ou "Recebi 1200 do trabalho".',
+      'Não entendi. Para registrar gastos/receitas: "Gastei 38 no mercado". Para consultar: "Quanto posso gastar?"',
       config
     );
     return;

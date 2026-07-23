@@ -13,11 +13,12 @@ functions/src/whatsapp/
                                     disconnectWhatsApp
   commands.ts                    → fluxo SIM/NÃO, escrita idempotente da transação
   parser.ts                      → interpretação de texto (regex + palavras-chave)
+  queries.ts                     → W5: motor de respiro/ritmo/simulação (backend)
   categories.ts                  → sugestão de categoria (regex + palavras-chave)
   signature.ts                   → validação HMAC SHA-256
-  verification.ts                → handshake GET da Meta
-  sendMessage.ts                 → envio de mensagem via WhatsApp Cloud API
-  secrets.ts                     → defineSecret dos 5 segredos
+  verification.ts               → handshake GET da Meta
+  sendMessage.ts                → envio de mensagem via WhatsApp Cloud API
+  secrets.ts                    → defineSecret dos 5 segredos
   types.ts
   __tests__/
 
@@ -155,3 +156,103 @@ regex/palavras-chave determinísticas. Nenhuma chamada a OpenAI, Gemini ou
 qualquer outro provedor de IA existe neste módulo (a única função do
 projeto que usa IA, `processarGastoComIA` em `functions/index.ts`, é
 anterior a esta fase e não foi alterada nem é usada pelo WhatsApp).
+
+
+---
+
+## W5: Consultas de Respiro pelo WhatsApp
+
+Implementado no módulo `queries.ts` — motor de cálculo financeiro 100% backend,
+sem dependência do domínio frontend. Suporta duas modalidades:
+
+### Consulta pura de respiro
+
+**Keywords aceitas:**
+- `quanto posso gastar`
+- `qual meu respiro`
+- `meu respiro`
+- `como ta minha vida`
+- `como ta minhas financas/financia`
+- `situação`
+- `resumo`
+- `saldo atual`
+- `tô bem` / `to bem`
+
+**Fluxo:**
+1. `parseQueryIntent` detecta a intenção de consulta (antes de `parseTransactionIntent`)
+2. `getFinancialPulse(uid, db)` busca transações do Firestore e calcula respiro + ritmo
+3. `formatPulseResponse` monta a resposta em texto
+4. Enviada via `sendWhatsAppTextMessage`
+
+**Resposta enviada:**
+```
+🌟 Situação: Saudável
+
+💰 Respiro: Você tem R$ 1.240 livres
+📊 Ritmo: Pode gastar até R$ 68 por dia
+📅 Próxima renda em 18 dias
+
+💵 Saldo do mês: R$ 2.400 (R$ 2.400 entrada, R$ 1.160 saída)
+
+Digite "simular 350" para testar uma compra.
+```
+
+### Simulação de compra
+
+**Keywords aceitas:**
+- `simular <valor>`
+- `e se eu gastar <valor>`
+- `se eu gastar <valor>`
+- `posso comprar <valor>`
+- `posso gastar <valor>`
+
+**Funcionalidades:**
+- Extrai valor da mensagem (aceita `350`, `350,00`, `1.200,50`)
+- Detecta forma de pagamento (à vista / parcelado)
+- Detecta número de parcelas (`3x`, `em 6 vezes`)
+- Monta cenário com `buildSimulation`
+- Responde com veredito, comparativo antes/depois e risco
+
+**Resposta enviada:**
+```
+✅ Tudo certo! Seu respiro aguenta essa compra.
+
+💸 Compra: R$ 350 (À vista)
+   Descrição: Tênis
+
+📊 Seu respiro:
+   Antes: R$ 1.240
+   Depois: R$ 890 (-R$ 350)
+
+📈 Ritmo diário:
+   Antes: R$ 68/dia
+   Depois: R$ 49/dia (-R$ 19)
+```
+
+**Vereditos:**
+- `🚨 Cuidado!` — respiro fica negativo
+- `⚠️ Atenção!` — respiro cai abaixo de 10% das despesas
+- `✅ Tudo certo!` — respiro aguenta a compra
+
+### Motor de cálculo (`queries.ts`)
+
+O módulo replica a lógica do domínio frontend (`domain/finance/`) para rodar
+100% no backend:
+
+- `getFinancialPulse` — busca transações do Firestore, calcula respiro,
+  ritmo diário, próxima renda, classificação de saúde
+- `buildSimulation` — simula impacto de uma compra (à vista ou parcelada)
+- `formatPulseResponse` — formata resposta de consulta
+- `formatSimulationResponse` — formata resposta de simulação
+
+**Dados usados:**
+- Coleção `users/{uid}/transactions` — transações do mês atual e próximo
+- Sem necessidade de `financialContext` (usa transações reais)
+- Sem IA externa — cálculo determinístico
+
+### Limitações do W5
+
+- Não considera metas de reserva mínima (usa `protectedAmount = 0`)
+- Compromissos futuros não registrados como transação não são considerados
+- Parcelas avançam ~30 dias por parcela (pode não refletir datas reais)
+- Uma única simulação por vez (mesmo flow que transações — mesma limitação)

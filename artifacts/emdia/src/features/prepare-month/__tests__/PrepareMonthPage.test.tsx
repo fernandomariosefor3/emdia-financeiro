@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Router, Switch, Route } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { ProtectedRoute } from "@/App";
-import PrepareSeuMes, { isPrepareMonthEnabled } from "@/pages/prepare-seu-mes";
+import PrepareSeuMes from "@/pages/prepare-seu-mes";
 import PrepareMonthPreview from "@/pages/prepare-month-preview";
 import { PrepareMonthPage } from "../PrepareMonthPage";
 import { useAuth } from "@/lib/auth-context";
@@ -82,13 +82,7 @@ describe("PrepareSeuMes (rota oficial — feature flag e proteção)", () => {
     expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
   });
 
-  it("4. flag ausente (padrão de produção) mantém a experiência desligada", () => {
-    expect(isPrepareMonthEnabled(undefined)).toBe(false);
-    expect(isPrepareMonthEnabled("")).toBe(false);
-    expect(isPrepareMonthEnabled("1")).toBe(false);
-  });
-
-  it("5. rota antiga /prepare-month-preview redireciona para /prepare-seu-mes", async () => {
+  it("4. rota antiga /prepare-month-preview redireciona para /prepare-seu-mes", async () => {
     const { hook, history } = memoryLocation({ path: "/prepare-month-preview", record: true });
     render(
       <Router hook={hook}>

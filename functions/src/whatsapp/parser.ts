@@ -1,4 +1,4 @@
-import { ParsedTransactionIntent, TransactionType } from "./types";
+import { ParsedTransactionIntent, ParsedWhatsAppIntent, TransactionType } from "./types";
 
 // Deliberately simple keyword + regex matching — no AI/LLM in this phase.
 const EXPENSE_KEYWORDS = ["gastei", "paguei", "comprei", "gasto de", "saiu"];
@@ -83,4 +83,96 @@ export function parseTransactionIntent(rawText: string): ParsedTransactionIntent
   const description = extractDescription(text, matchedKeyword, amountMatch[0]);
 
   return { type, amountInCents, description };
+}
+
+// ─────────────────────────────────────────────
+// PARSER DE INTENÇÕES DE CONSULTA (W5)
+// ─────────────────────────────────────────────
+
+const QUERY_KEYWORDS = [
+  "quanto posso gastar",
+  "qual meu respiro",
+  "meu respiro",
+  "como ta minha vida",
+  "como ta minhas financia",
+  "como ta minhas financas",
+  "situa",
+  "tô bem",
+  "to bem",
+  "resumo",
+  "saldo atual",
+];
+
+const SIMULATE_KEYWORDS = [
+  "simular",
+  "e se eu gastar",
+  "se eu gastar",
+  "posso comprar",
+  "posso gastar",
+  "compra de",
+  "gastar",
+];
+
+/** Detecta se a mensagem é uma intenção de consulta pura (não registra transação). */
+export function parseQueryIntent(text: string): ParsedWhatsAppIntent {
+  const lower = text.trim().toLowerCase();
+
+  // Primeiro: tenta detectar simulação (contém valor numérico)
+  const simulateIntent = tryParseSimulate(lower, text);
+  if (simulateIntent) return simulateIntent;
+
+  // Segundo: detecta pergunta de consulta pura
+  if (isQueryIntent(lower)) {
+    return { kind: "query" };
+  }
+
+  return null;
+}
+
+function isQueryIntent(lower: string): boolean {
+  return QUERY_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+function tryParseSimulate(lower: string, originalText: string): Exclude<ParsedWhatsAppIntent, null> | null {
+  const hasSimulateKeyword = SIMULATE_KEYWORDS.some((kw) => lower.includes(kw));
+
+  if (!hasSimulateKeyword) return null;
+
+  // Tenta extrair valor da mensagem original (preserva separadores originais)
+  const amountMatch = originalText.match(/\d+(?:[.,]\d+)*/);
+  if (!amountMatch) return null;
+
+  const rawAmount = amountMatch[0];
+  let normalized = rawAmount.replace(/\./g, "").replace(",", ".");
+  const value = Number(normalized);
+
+  if (!Number.isFinite(value) || value <= 0) return null;
+
+  // Extrai descrição (texto após o valor, removendo palavras-chave)
+  let description = originalText
+    .replace(/\d+(?:[.,]\d+)*/g, "")
+    .replace(/simular|e se eu gastar|se eu gastar|posso comprar|posso gastar|compra de|gastar/gi, "")
+    .replace(/r\$\s*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Tenta detectar forma de pagamento
+  const paymentMethod = lower.includes("parcel") || lower.includes("parcela") ? "installments" : "cash";
+
+  // Tenta detectar número de parcelas
+  let installments = 1;
+  const parcelMatch = originalText.match(/(\d+)\s*(?:x|vezes|parcela)/);
+  if (parcelMatch) {
+    installments = Math.max(1, Math.min(parseInt(parcelMatch[1], 10), 12));
+  } else if (paymentMethod === "installments") {
+    installments = 2; // default para parcelado sem especificar
+  }
+
+  return {
+    kind: "simulate",
+    amountInCents: Math.round(value * 100),
+    description: description || "Compra via WhatsApp",
+    paymentMethod: paymentMethod as "cash" | "installments",
+    installments,
+  };
 }
