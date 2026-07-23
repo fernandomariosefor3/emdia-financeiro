@@ -1,6 +1,8 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Router } from "wouter";
+import { memoryLocation } from "wouter/memory-location";
 import { PrepareMonthPage } from "../../PrepareMonthPage";
 import { useAuth } from "@/lib/auth-context";
 import type { User } from "firebase/auth";
@@ -90,7 +92,7 @@ async function advanceToPreview() {
   clickContinuar(); // commitments
   clickContinuar(); // goals
   clickContinuar(); // preview
-  await screen.findByRole("heading", { name: /Veja como seu mês pode ficar/i });
+  await screen.findByRole("heading", { name: /Seu mês preparado/i });
 }
 
 describe("Prepare seu mês — persistência integrada (Firebase mockado)", () => {
@@ -99,16 +101,19 @@ describe("Prepare seu mês — persistência integrada (Firebase mockado)", () =
     mockedUseAuth.mockReturnValue(authenticated());
   });
 
-  it("1. carrega o contexto existente ao abrir e preenche o formulário", async () => {
+  it("1. carrega o contexto existente ao abrir, preenche o formulário e avisa o usuário", async () => {
     vi.mocked(getDoc).mockResolvedValueOnce(snapshot(true, baseSavedDocument()) as never);
     render(<PrepareMonthPage />);
 
     await waitFor(() => {
       expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("1500,00");
     });
+    expect(
+      screen.getByText(/Seu planejamento atual foi carregado\. Você pode revisá-lo e salvar novamente\./i)
+    ).toBeInTheDocument();
   });
 
-  it("2. salvar mostra 'Salvando...' e depois a confirmação de sucesso", async () => {
+  it("2. salvar mostra 'Salvando...' e depois confirma que o mês está preparado, com os dois botões", async () => {
     // getDoc is called once for the initial load and again inside saveCurrent's
     // own pre-write check — both resolve "not found" since nothing exists yet.
     vi.mocked(getDoc).mockResolvedValue(snapshot(false) as never);
@@ -118,8 +123,11 @@ describe("Prepare seu mês — persistência integrada (Firebase mockado)", () =
     await advanceToPreview();
     fireEvent.click(screen.getByRole("button", { name: /Salvar meu planejamento/i }));
 
-    await waitFor(() => expect(screen.getByText(/Seu planejamento foi salvo\./i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Seu mês está preparado\./i)).toBeInTheDocument());
     expect(setDoc).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /Voltar ao início/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Revisar planejamento/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Salvar meu planejamento/i })).not.toBeInTheDocument();
   });
 
   it("3. erro ao salvar mantém os dados preenchidos no formulário", async () => {
@@ -163,17 +171,51 @@ describe("Prepare seu mês — persistência integrada (Firebase mockado)", () =
     // setDoc — it awaits a getDoc pre-check first — before resolving it.
     await waitFor(() => expect(setDoc).toHaveBeenCalledTimes(1));
     resolveSetDoc();
-    await waitFor(() => expect(screen.getByText(/Seu planejamento foi salvo\./i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Seu mês está preparado\./i)).toBeInTheDocument());
     expect(setDoc).toHaveBeenCalledTimes(1);
   });
 
-  it("5. usuário não autenticado continua vendo o aviso de simulação, sem botão de salvar", async () => {
+  it("5. usuário não autenticado é convidado a fazer login, sem botão de salvar", async () => {
     mockedUseAuth.mockReturnValue({ ...authenticated(), user: null });
     render(<PrepareMonthPage />);
 
     await advanceToPreview();
-    expect(screen.getAllByText(/Esta é uma simulação\. Nada será salvo\./i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Faça login para salvar seu planejamento\./i).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Salvar meu planejamento/i })).not.toBeInTheDocument();
     expect(getDoc).not.toHaveBeenCalled();
+  });
+
+  it("6. revisar planejamento volta para a primeira etapa preservando os dados salvos", async () => {
+    vi.mocked(getDoc).mockResolvedValue(snapshot(false) as never);
+    vi.mocked(setDoc).mockResolvedValueOnce(undefined as never);
+    render(<PrepareMonthPage />);
+
+    await advanceToPreview();
+    fireEvent.click(screen.getByRole("button", { name: /Salvar meu planejamento/i }));
+    await waitFor(() => expect(screen.getByText(/Seu mês está preparado\./i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /Revisar planejamento/i }));
+
+    expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
+    expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("1000,00");
+  });
+
+  it("7. voltar ao início navega para o dashboard após salvar", async () => {
+    vi.mocked(getDoc).mockResolvedValue(snapshot(false) as never);
+    vi.mocked(setDoc).mockResolvedValueOnce(undefined as never);
+    const { hook, history } = memoryLocation({ path: "/prepare-seu-mes", record: true });
+    render(
+      <Router hook={hook}>
+        <PrepareMonthPage />
+      </Router>
+    );
+
+    await advanceToPreview();
+    fireEvent.click(screen.getByRole("button", { name: /Salvar meu planejamento/i }));
+    await waitFor(() => expect(screen.getByText(/Seu mês está preparado\./i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /Voltar ao início/i }));
+
+    expect(history[history.length - 1]).toBe("/dashboard");
   });
 });
