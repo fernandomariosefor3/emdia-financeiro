@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { addDays } from "@/domain/finance/dates";
 import { PrepareMonthFormState, PREPARE_MONTH_SCREENS } from "./types";
 import { createInitialPrepareMonthState } from "./initialState";
@@ -95,6 +97,7 @@ export function PrepareMonthWizard() {
   const [showErrors, setShowErrors] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const hasPrefilledRef = useRef(false);
+  const [, navigate] = useLocation();
 
   const persistence = usePrepareMonthPersistence();
 
@@ -123,6 +126,15 @@ export function PrepareMonthWizard() {
 
   function handleRetrySave() {
     void persistence.retrySave();
+  }
+
+  function handleBackToStart() {
+    navigate("/dashboard");
+  }
+
+  function handleReviewPlan() {
+    setShowErrors(false);
+    setScreenIndex(0);
   }
 
   const balanceErrors = validateBalanceScreen(formState, todayIso);
@@ -168,6 +180,15 @@ export function PrepareMonthWizard() {
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
       <PrepareMonthProgress currentScreen={currentScreen} />
+
+      {persistence.loadStatus === "loaded" && (
+        <Alert className="bg-blue-50/50 border-blue-100 text-blue-900">
+          <Info className="h-4 w-4 text-blue-600" aria-hidden="true" />
+          <AlertDescription className="text-blue-700/90 text-sm">
+            Seu planejamento atual foi carregado. Você pode revisá-lo e salvar novamente.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {currentScreen === "balance" && (
         <ReferenceBalanceStep
@@ -220,6 +241,8 @@ export function PrepareMonthWizard() {
           saveErrorMessage={persistence.saveErrorMessage}
           onSave={handleSave}
           onRetrySave={handleRetrySave}
+          onBackToStart={handleBackToStart}
+          onReviewPlan={handleReviewPlan}
         />
       )}
 

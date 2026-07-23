@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Router } from "wouter";
+import { Router, Switch, Route } from "wouter";
+import { memoryLocation } from "wouter/memory-location";
 import { ProtectedRoute } from "@/App";
-import PrepareMonthPreview, { isPrepareMonthEnabled } from "@/pages/prepare-month-preview";
+import PrepareSeuMes, { isPrepareMonthEnabled } from "@/pages/prepare-seu-mes";
+import PrepareMonthPreview from "@/pages/prepare-month-preview";
 import { PrepareMonthPage } from "../PrepareMonthPage";
 import { useAuth } from "@/lib/auth-context";
 
@@ -38,7 +40,7 @@ function unauthenticated() {
   return { ...authenticated(), user: null };
 }
 
-describe("PrepareMonthPreview (Feature Flag e Proteção — 1 a 3)", () => {
+describe("PrepareSeuMes (rota oficial — feature flag e proteção)", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -48,42 +50,62 @@ describe("PrepareMonthPreview (Feature Flag e Proteção — 1 a 3)", () => {
     vi.stubEnv("VITE_ENABLE_PREPARE_MONTH", "false");
     render(
       <Router>
-        <ProtectedRoute component={PrepareMonthPreview} />
+        <ProtectedRoute component={PrepareSeuMes} />
       </Router>
     );
     expect(screen.queryByText(/Prepare seu mês/i)).not.toBeInTheDocument();
   });
 
-  it("2. usuário não autenticado continua protegido mesmo com a flag ativa", () => {
+  it("2. usuário não autenticado é enviado para o login mesmo com a flag ativa", () => {
     mockedUseAuth.mockReturnValue(unauthenticated());
     vi.stubEnv("VITE_ENABLE_PREPARE_MONTH", "true");
+    const { hook, history } = memoryLocation({ path: "/prepare-seu-mes", record: true });
     render(
-      <Router>
-        <ProtectedRoute component={PrepareMonthPreview} />
+      <Router hook={hook}>
+        <ProtectedRoute component={PrepareSeuMes} />
       </Router>
     );
     expect(screen.queryByText(/Prepare seu mês/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Seu ponto de partida/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Seu saldo/i)).not.toBeInTheDocument();
+    expect(history[history.length - 1]).toMatch(/^\/login/);
   });
 
-  it("3. página abre normalmente quando autenticado e a flag está ativa", () => {
+  it("3. página abre normalmente na rota oficial quando autenticado e a flag está ativa", () => {
     mockedUseAuth.mockReturnValue(authenticated());
     vi.stubEnv("VITE_ENABLE_PREPARE_MONTH", "true");
     render(
       <Router>
-        <ProtectedRoute component={PrepareMonthPreview} />
+        <ProtectedRoute component={PrepareSeuMes} />
       </Router>
     );
     expect(screen.getByText(/Prepare seu mês/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Seu ponto de partida/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
   });
 
-  it("14. flag ausente (padrão de produção) mantém a experiência desligada", () => {
+  it("4. flag ausente (padrão de produção) mantém a experiência desligada", () => {
     expect(isPrepareMonthEnabled(undefined)).toBe(false);
+    expect(isPrepareMonthEnabled("")).toBe(false);
+    expect(isPrepareMonthEnabled("1")).toBe(false);
+  });
+
+  it("5. rota antiga /prepare-month-preview redireciona para /prepare-seu-mes", async () => {
+    const { hook, history } = memoryLocation({ path: "/prepare-month-preview", record: true });
+    render(
+      <Router hook={hook}>
+        <Switch>
+          <Route path="/prepare-month-preview" component={PrepareMonthPreview} />
+          <Route path="/prepare-seu-mes">
+            <div>marcador da rota oficial</div>
+          </Route>
+        </Switch>
+      </Router>
+    );
+    await waitFor(() => expect(history[history.length - 1]).toBe("/prepare-seu-mes"));
+    expect(screen.getByText(/marcador da rota oficial/i)).toBeInTheDocument();
   });
 });
 
-describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
+describe("PrepareMonthWizard (fluxo)", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     mockedUseAuth.mockReturnValue(unauthenticated());
@@ -109,15 +131,15 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Voltar$/i }));
   }
 
-  it("7. data futura no saldo é bloqueada e mantém o usuário na mesma etapa", () => {
+  it("data futura no saldo é bloqueada e mantém o usuário na mesma etapa", () => {
     render(<PrepareMonthPage />);
     fillBalance("1000,00", "2099-01-01");
     clickContinuar();
     expect(screen.getByText(/data não pode ser no futuro/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Seu ponto de partida/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
   });
 
-  it("19. meta válida permite avançar sem bloqueio", () => {
+  it("meta válida permite avançar sem bloqueio", () => {
     render(<PrepareMonthPage />);
     fillBalance();
     clickContinuar(); // -> reserve
@@ -130,10 +152,10 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     fireEvent.change(screen.getByLabelText(/Valor total da meta/i), { target: { value: "5000,00" } });
     fireEvent.change(screen.getByLabelText(/Já protegido/i), { target: { value: "1000,00" } });
     clickContinuar(); // -> preview
-    expect(screen.getByRole("heading", { name: /Veja como seu mês pode ficar/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seu mês preparado/i })).toBeInTheDocument();
   });
 
-  it("20. meta protegida maior que o alvo é bloqueada", () => {
+  it("meta protegida maior que o alvo é bloqueada", () => {
     render(<PrepareMonthPage />);
     fillBalance();
     clickContinuar();
@@ -147,10 +169,10 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     fireEvent.change(screen.getByLabelText(/Já protegido/i), { target: { value: "1000,00" } });
     clickContinuar();
     expect(screen.getByText(/não pode ser maior que o valor total da meta/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /O que você quer proteger/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Metas protegidas/i })).toBeInTheDocument();
   });
 
-  it("21. contexto parcial exibe qualidade parcial e hipóteses consideradas", () => {
+  it("contexto parcial exibe qualidade parcial e hipóteses consideradas", () => {
     render(<PrepareMonthPage />);
     fillBalance();
     clickContinuar();
@@ -158,12 +180,12 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     clickContinuar();
     clickContinuar();
     clickContinuar();
-    expect(screen.getByRole("heading", { name: /Veja como seu mês pode ficar/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seu mês preparado/i })).toBeInTheDocument();
     expect(screen.getByText(/^Parcial$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reserva mínima ainda não foi definida/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você ainda não definiu sua reserva/i)).toBeInTheDocument();
   });
 
-  it("22 e 23. prévia válida exibe o Respiro como estimativa", () => {
+  it("prévia válida exibe o Respiro e o Ritmo como estimativas", () => {
     render(<PrepareMonthPage />);
     fillBalance("1500,00", "2026-07-21");
     clickContinuar();
@@ -172,11 +194,24 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     clickContinuar();
     clickContinuar();
     expect(screen.getByText(/Dinheiro livre estimado/i)).toBeInTheDocument();
-    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument();
+    expect(screen.getByText(/Ritmo seguro diário/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/1\.500,00/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Estimativa com os dados informados/i)).toBeInTheDocument();
   });
 
-  it("24. renda provável não é somada ao Respiro do cenário oficial", () => {
+  it("saldo projetado e data considerada no cálculo aparecem na prévia final", () => {
+    render(<PrepareMonthPage />);
+    fillBalance("1500,00", "2026-07-21");
+    clickContinuar();
+    clickContinuar();
+    clickContinuar();
+    clickContinuar();
+    clickContinuar();
+    expect(screen.getByText(/Saldo projetado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Data considerada no cálculo/i)).toBeInTheDocument();
+  });
+
+  it("renda provável não é somada ao Respiro do cenário oficial", () => {
     render(<PrepareMonthPage />);
     fillBalance("1000,00", "2026-07-21");
     clickContinuar();
@@ -191,11 +226,11 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     clickContinuar();
     clickContinuar();
     // Saldo de 1000,00 permanece intacto: a renda provável de 500,00 não deveria ser somada.
-    expect(screen.getByText(/1\.000,00/)).toBeInTheDocument();
+    expect(screen.getAllByText(/1\.000,00/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Renda provável e incerta não foram consideradas/i)).toBeInTheDocument();
   });
 
-  it("25. reiniciar simulação limpa todo o estado preenchido", () => {
+  it("recomeçar planejamento limpa todo o estado preenchido", () => {
     render(<PrepareMonthPage />);
     fillBalance("1500,00", "2026-07-21");
     clickContinuar();
@@ -204,12 +239,12 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     clickContinuar();
     clickContinuar();
     clickContinuar();
-    fireEvent.click(screen.getByRole("button", { name: /Reiniciar simulação/i }));
-    expect(screen.getByRole("heading", { name: /Seu ponto de partida/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Recomeçar planejamento/i }));
+    expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
     expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("");
   });
 
-  it("26. dados não persistem após remontagem do componente", () => {
+  it("dados não persistem após remontagem do componente", () => {
     const { unmount } = render(<PrepareMonthPage />);
     fillBalance("1500,00", "2026-07-21");
     expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("1500,00");
@@ -219,7 +254,7 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("");
   });
 
-  it("27. nenhuma chamada de rede ocorre durante o fluxo do protótipo", () => {
+  it("nenhuma chamada de rede ocorre durante o fluxo do planejamento", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<PrepareMonthPage />);
     fillBalance();
@@ -231,21 +266,21 @@ describe("PrepareMonthWizard (fluxo — 7 e 19 a 29)", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("28. navegação voltar/avançar preserva os dados já preenchidos", () => {
+  it("navegação voltar/avançar preserva os dados já preenchidos", () => {
     render(<PrepareMonthPage />);
     fillBalance("1500,00", "2026-07-21");
     clickContinuar();
-    expect(screen.getByRole("heading", { name: /Reserva mínima/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Sua reserva/i })).toBeInTheDocument();
     clickVoltar();
-    expect(screen.getByRole("heading", { name: /Seu ponto de partida/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seu saldo/i })).toBeInTheDocument();
     expect((screen.getByLabelText(/Saldo de hoje/i) as HTMLInputElement).value).toBe("1500,00");
   });
 
-  it("29. o foco muda para o título da nova etapa ao avançar", () => {
+  it("o foco muda para o título da nova etapa ao avançar", () => {
     render(<PrepareMonthPage />);
     fillBalance();
     clickContinuar();
-    const reserveHeading = screen.getByText(/Reserva mínima/i);
+    const reserveHeading = screen.getByRole("heading", { name: /Sua reserva/i });
     expect(document.activeElement).toBe(reserveHeading);
   });
 });

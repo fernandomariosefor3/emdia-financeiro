@@ -128,13 +128,13 @@ export function buildPrepareMonthPreview(
   );
 
   const assumptions: string[] = ["Renda provável e incerta não foram consideradas no cenário principal."];
-  if (formState.reserve.choice === "undecided") assumptions.push("Reserva mínima ainda não foi definida.");
+  if (formState.reserve.choice === "undecided") assumptions.push("Você ainda não definiu sua reserva.");
   if (formState.incomes.length === 0) assumptions.push("Nenhuma renda esperada foi informada.");
   if (formState.commitments.length === 0) assumptions.push("Nenhum compromisso foi informado.");
   if (formState.goals.length === 0) assumptions.push("Nenhuma meta protegida foi informada.");
 
   const ignoredNotes: string[] = [
-    "Esta simulação usa apenas os dados informados aqui — nenhuma movimentação real foi conectada.",
+    "Este cálculo usa apenas os dados informados aqui — nenhuma movimentação real foi conectada.",
     ...validation.warnings.map((w) => w.message),
   ];
 
@@ -145,6 +145,7 @@ export function buildPrepareMonthPreview(
     breathingRoomInCents: breathing.breathingRoomInCents,
     safeDailyPaceInCents: pace.safeDailyPaceInCents,
     projectedBalanceInCents,
+    referenceDate: todayIso,
     topRisk: sortedRisks[0] ?? null,
     recommendedAction: formatRecommendedActionForUser(recommendedAction),
     assumptions,

@@ -49,7 +49,7 @@ export function ExpectedIncomeStep({ value, onChange, errors, headingRef }: Expe
     <div className="space-y-6">
       <div>
         <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          O que pode entrar
+          Receitas esperadas
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Renda esperada. O cenário oficial só soma valores em que você tem certeza — receitas

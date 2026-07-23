@@ -12,7 +12,7 @@ export function PrepareMonthProgress({ currentScreen }: PrepareMonthProgressProp
   );
 
   return (
-    <nav aria-label="Progresso da simulação" className="mb-6">
+    <nav aria-label="Progresso do planejamento" className="mb-6">
       <ol className="flex flex-wrap gap-3">
         {PREPARE_MONTH_STAGES.map((stage, index) => {
           const isDone = index < currentStageIndex;

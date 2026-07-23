@@ -12,6 +12,7 @@ import Transacoes from "@/pages/transacoes";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
 import TodayPreview from "@/pages/today-preview";
+import PrepareSeuMes from "@/pages/prepare-seu-mes";
 import PrepareMonthPreview from "@/pages/prepare-month-preview";
 
 export function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -56,6 +57,9 @@ function Router() {
       </Route>
       <Route path="/today-preview">
         <ProtectedRoute component={TodayPreview} />
+      </Route>
+      <Route path="/prepare-seu-mes">
+        <ProtectedRoute component={PrepareSeuMes} />
       </Route>
       <Route path="/prepare-month-preview">
         <ProtectedRoute component={PrepareMonthPreview} />

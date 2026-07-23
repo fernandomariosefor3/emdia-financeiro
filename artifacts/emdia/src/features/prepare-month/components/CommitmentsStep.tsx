@@ -50,7 +50,7 @@ export function CommitmentsStep({ value, onChange, errors, headingRef }: Commitm
     <div className="space-y-6">
       <div>
         <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          O que precisa sair
+          Compromissos
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Contas e compromissos que se repetem. Marque como essencial o que não pode atrasar.

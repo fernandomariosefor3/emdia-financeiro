@@ -46,7 +46,7 @@ export function ProtectedGoalsStep({ value, onChange, errors, headingRef }: Prot
     <div className="space-y-6">
       <div>
         <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          O que você quer proteger
+          Metas protegidas
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Metas protegidas reduzem o dinheiro livre estimado, para você não gastar o que já tem
