@@ -74,3 +74,4 @@ export const processarGastoComIA = functions
 });
 
 export * from "./src/whatsapp";
+export * from "./src/billing";
