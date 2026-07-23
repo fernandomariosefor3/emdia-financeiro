@@ -101,6 +101,12 @@ jobs:
         env:
           NODE_ENV: production
           BASE_PATH: "/"
+          # Public Vite build-time flag (bundled into the client JS either
+          # way) — not a secret. Prepare Your Month is now an official
+          # feature; Emdia no Zap stays paused until the WhatsApp number is
+          # provisioned, so VITE_ENABLE_WHATSAPP_LINK is intentionally not
+          # set here.
+          VITE_ENABLE_PREPARE_MONTH: "true"
 
       - name: Check bundle size
         run: |

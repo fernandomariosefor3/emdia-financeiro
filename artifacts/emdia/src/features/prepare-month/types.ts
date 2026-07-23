@@ -71,9 +71,10 @@ export interface PrepareMonthStage {
 }
 
 export const PREPARE_MONTH_STAGES: PrepareMonthStage[] = [
-  { screens: ["balance", "reserve"], label: "Seu ponto de partida" },
-  { screens: ["income"], label: "O que pode entrar" },
-  { screens: ["commitments"], label: "O que precisa sair" },
-  { screens: ["goals"], label: "O que você quer proteger" },
-  { screens: ["preview"], label: "Veja como seu mês pode ficar" },
+  { screens: ["balance"], label: "Seu saldo" },
+  { screens: ["reserve"], label: "Sua reserva" },
+  { screens: ["income"], label: "Receitas esperadas" },
+  { screens: ["commitments"], label: "Compromissos" },
+  { screens: ["goals"], label: "Metas protegidas" },
+  { screens: ["preview"], label: "Seu mês preparado" },
 ];

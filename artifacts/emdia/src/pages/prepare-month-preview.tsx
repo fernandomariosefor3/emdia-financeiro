@@ -1,20 +1,6 @@
 import { Redirect } from "wouter";
-import { PrepareMonthPage } from "@/features/prepare-month";
 
-/**
- * Strict parser: only the literal string "true" enables the experience.
- * Absent, empty, or any other value means disabled — no silent fallback.
- */
-export function isPrepareMonthEnabled(rawValue: string | undefined): boolean {
-  return rawValue === "true";
-}
-
+/** Deprecated path — the official route is /prepare-seu-mes. */
 export default function PrepareMonthPreview() {
-  const isEnabled = isPrepareMonthEnabled(import.meta.env.VITE_ENABLE_PREPARE_MONTH);
-
-  if (!isEnabled) {
-    return <Redirect to="/dashboard" />;
-  }
-
-  return <PrepareMonthPage />;
+  return <Redirect to="/prepare-seu-mes" />;
 }
