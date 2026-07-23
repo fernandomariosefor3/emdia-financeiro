@@ -15,6 +15,7 @@ import TodayPreview from "@/pages/today-preview";
 import PrepareSeuMes from "@/pages/prepare-seu-mes";
 import PrepareMonthPreview from "@/pages/prepare-month-preview";
 import WhatsAppPreview from "@/pages/whatsapp-preview";
+import Planos from "@/pages/planos";
 
 export function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
@@ -68,6 +69,7 @@ function Router() {
       <Route path="/whatsapp-preview">
         <ProtectedRoute component={WhatsAppPreview} />
       </Route>
+      <Route path="/planos" component={Planos} />
       <Route component={NotFound} />
     </Switch>
   );
