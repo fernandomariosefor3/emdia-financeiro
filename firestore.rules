@@ -63,6 +63,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── Assinatura / Plano Fundador (subcoleção) ─────────────────────────────────
+    // Status controlado somente pelo backend: escrito exclusivamente pelas
+    // Cloud Functions de billing (createAnnualCheckoutSession no setup e
+    // stripeBillingWebhook nas transições de status) via Admin SDK, que
+    // ignora estas regras. O cliente nunca grava aqui.
+    match /users/{userId}/billing/{docId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
     // ── Transações (subcoleção) ────────────────────────────────────────────────
 
     match /users/{userId}/transactions/{txId} {

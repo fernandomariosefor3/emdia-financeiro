@@ -52,6 +52,48 @@ jobs:
       - name: Test Prepare Your Month Prototype
         run: pnpm --filter "./artifacts/emdia" run test:prepare-month
 
+      - name: Test Prepare Your Month Persistence
+        run: pnpm --filter "./artifacts/emdia" run test:financial-context-persistence
+
+      - name: Test Emdia no Zap (WhatsApp) interface
+        run: pnpm --filter "./artifacts/emdia" run test:whatsapp-link
+
+      - name: Test Founder Plan page
+        run: pnpm --filter "./artifacts/emdia" run test:founder-plan
+
+  # ── 1b. Functions: typecheck, unit tests, build ───────────────────────────
+  functions-quality:
+    name: Functions Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Type check
+        working-directory: functions
+        run: npm run typecheck
+
+      - name: Test WhatsApp (unit — no emulator)
+        working-directory: functions
+        run: npm run test:whatsapp-unit
+
+      - name: Test Billing foundation (unit — no emulator)
+        working-directory: functions
+        run: npm run test:billing-unit
+
+      - name: Build
+        working-directory: functions
+        run: npm run build
+
   # ── 2. Security audit ─────────────────────────────────────────────────────
   security:
     name: Security Audit
@@ -105,7 +147,9 @@ jobs:
           # way) — not a secret. Prepare Your Month is now an official
           # feature; Emdia no Zap stays paused until the WhatsApp number is
           # provisioned, so VITE_ENABLE_WHATSAPP_LINK is intentionally not
-          # set here.
+          # set here. VITE_ENABLE_BILLING is intentionally not set either —
+          # /planos stays informational (no Checkout) until Stripe is
+          # configured, see docs/FOUNDER-ANNUAL-PLAN.md.
           VITE_ENABLE_PREPARE_MONTH: "true"
 
       - name: Check bundle size

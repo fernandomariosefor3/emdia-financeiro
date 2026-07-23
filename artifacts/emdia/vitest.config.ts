@@ -14,6 +14,10 @@ export default mergeConfig(viteConfig, defineConfig({
       'src/features/prepare-month/__tests__/**/*.test.tsx',
       'src/features/prepare-month/data/__tests__/**/*.test.ts',
       'src/features/prepare-month/data/__tests__/**/*.test.tsx',
+      'src/features/whatsapp-link/__tests__/**/*.test.ts',
+      'src/features/whatsapp-link/__tests__/**/*.test.tsx',
+      'src/features/founder-plan/__tests__/**/*.test.ts',
+      'src/features/founder-plan/__tests__/**/*.test.tsx',
     ]
   }
 }))

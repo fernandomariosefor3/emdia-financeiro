@@ -1,0 +1,1 @@
+export { FounderPlanPage } from "./FounderPlanPage";

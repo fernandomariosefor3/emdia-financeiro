@@ -72,3 +72,6 @@ export const processarGastoComIA = functions
       res.status(500).json({ error: "Erro interno na IA." });
     }
 });
+
+export * from "./src/whatsapp";
+export * from "./src/billing";
