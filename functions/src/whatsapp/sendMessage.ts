@@ -1,13 +1,13 @@
 import { WhatsAppSendConfig } from "./types";
 
-const GRAPH_API_VERSION = "v20.0";
+const META_GRAPH_API_VERSION = "v25.0";
 
 /**
  * Sends a plain text WhatsApp message via the Meta Cloud API. Uses the
  * Node 20 global fetch — no extra HTTP dependency needed.
  */
 export async function sendWhatsAppTextMessage(waId: string, body: string, config: WhatsAppSendConfig): Promise<void> {
-  const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${config.phoneNumberId}/messages`;
+  const url = `https://graph.facebook.com/${META_GRAPH_API_VERSION}/${config.phoneNumberId}/messages`;
 
   const response = await fetch(url, {
     method: "POST",

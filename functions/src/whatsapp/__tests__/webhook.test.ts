@@ -3,7 +3,7 @@ process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
 import { before, beforeEach, test } from "node:test";
 import assert from "node:assert";
 import * as admin from "firebase-admin";
-import { extractInboundEvent, markMessageProcessed, routeMessage, RouteMessageDeps } from "../webhook";
+import { extractInboundEvent, markMessageProcessed, markMessageCompleted, markMessageFailed, routeMessage, todayCivilDate, formatDate, RouteMessageDeps } from "../webhook";
 import { hashLinkCode } from "../linking";
 
 let db: FirebaseFirestore.Firestore;
@@ -86,16 +86,69 @@ test("extractInboundEvent", async (t) => {
   });
 });
 
+test("Date utilities (Fuso America/Fortaleza)", async (t) => {
+  await t.test("1. UTC no dia seguinte e Fortaleza ainda no dia anterior (21:00 local, 00:00 UTC)", () => {
+    // 2024-05-22T00:00:00Z = 1716336000
+    // In Fortaleza: 2024-05-21 21:00:00
+    assert.strictEqual(todayCivilDate(1716336000), "2024-05-21");
+  });
+
+  await t.test("2. transição antes e depois da meia-noite local", () => {
+    // 2024-05-22T02:59:59Z = 1716346799 (23:59:59 em Fortaleza)
+    assert.strictEqual(todayCivilDate(1716346799), "2024-05-21");
+    // 2024-05-22T03:00:00Z = 1716346800 (00:00:00 em Fortaleza)
+    assert.strictEqual(todayCivilDate(1716346800), "2024-05-22");
+  });
+
+  await t.test("3. timestamp inválido com fallback seguro", () => {
+    const invalidDates = [NaN, Infinity, -Infinity];
+    for (const val of invalidDates) {
+      const res = todayCivilDate(val);
+      assert.match(res, /^\d{4}-\d{2}-\d{2}$/); // Returns YYYY-MM-DD representing Date.now()
+    }
+  });
+
+  await t.test("4. formato final YYYY-MM-DD", () => {
+    const d = new Date("2024-06-05T15:00:00Z");
+    assert.strictEqual(formatDate(d), "2024-06-05");
+  });
+});
+
 test("markMessageProcessed", async (t) => {
-  await t.test("1. primeira vez retorna true", async () => {
+  await t.test("1. primeira vez retorna true (entra em processing)", async () => {
     assert.strictEqual(await markMessageProcessed("wamid.dedup1", db), true);
   });
 
-  await t.test("2. segunda vez com o mesmo messageId retorna false", async () => {
+  await t.test("2. segunda vez enquanto processing retorna false", async () => {
     await markMessageProcessed("wamid.dedup2", db);
     assert.strictEqual(await markMessageProcessed("wamid.dedup2", db), false);
   });
+
+  await t.test("3. se falhou antes, permite nova tentativa", async () => {
+    await markMessageProcessed("wamid.dedup3", db);
+    await markMessageFailed("wamid.dedup3", "error", db);
+    assert.strictEqual(await markMessageProcessed("wamid.dedup3", db), true);
+  });
+
+  await t.test("4. se está completed, retorna false", async () => {
+    await markMessageProcessed("wamid.dedup4", db);
+    await markMessageCompleted("wamid.dedup4", db);
+    assert.strictEqual(await markMessageProcessed("wamid.dedup4", db), false);
+  });
+
+  await t.test("5. execução simultânea: apenas uma thread ganha", async () => {
+    const results = await Promise.all([
+      markMessageProcessed("wamid.dedup5", db),
+      markMessageProcessed("wamid.dedup5", db),
+      markMessageProcessed("wamid.dedup5", db),
+    ]);
+    const trues = results.filter((r) => r === true).length;
+    const falses = results.filter((r) => r === false).length;
+    assert.strictEqual(trues, 1);
+    assert.strictEqual(falses, 2);
+  });
 });
+
 
 test("routeMessage", async (t) => {
   await t.test("1. VINCULAR com código válido vincula a conta e confirma por mensagem", async () => {
@@ -226,7 +279,7 @@ test("routeMessage", async (t) => {
       deps(send)
     );
 
-    assert.match(calls[0].body, /Não entendi o valor ou o tipo/i);
+    assert.match(calls[0].body, /Não entendi\. Para registrar/i);
     const pendingSnap = await db.collection("whatsappPendingCommands").doc("5511000000108").get();
     assert.strictEqual(pendingSnap.exists, false);
   });

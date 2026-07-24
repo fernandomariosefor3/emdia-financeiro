@@ -22,7 +22,7 @@ test("sendWhatsAppTextMessage", async (t) => {
       globalThis.fetch = originalFetch;
     }
 
-    assert.strictEqual(capturedUrl, "https://graph.facebook.com/v20.0/test-phone-id/messages");
+    assert.strictEqual(capturedUrl, "https://graph.facebook.com/v25.0/test-phone-id/messages");
     assert.strictEqual(capturedInit?.method, "POST");
     const headers = capturedInit?.headers as Record<string, string>;
     assert.strictEqual(headers.Authorization, "Bearer test-only-token");

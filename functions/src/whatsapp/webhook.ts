@@ -71,26 +71,53 @@ export function extractInboundEvent(body: unknown): WebhookInboundEvent {
 /** Atomic create-if-absent dedup guard, keyed by Meta's own messageId. */
 export async function markMessageProcessed(messageId: string, db: Firestore): Promise<boolean> {
   const ref = db.collection(PROCESSED_MESSAGES_COLLECTION).doc(messageId);
-  try {
-    await ref.create({ processedAt: new Date().toISOString() });
+  return db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    if (doc.exists) {
+      const state = doc.data()?.status;
+      if (state === "completed" || state === "processing") return false;
+    }
+    // Expira em 7 dias
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    t.set(ref, { 
+      status: "processing", 
+      updatedAt: new Date().toISOString(), 
+      expiresAt 
+    });
     return true;
-  } catch (error: unknown) {
-    const code = (error as { code?: number })?.code;
-    if (code === FIRESTORE_ALREADY_EXISTS_CODE) return false;
-    throw error;
-  }
+  });
 }
 
-function todayCivilDate(timestampSeconds: number): string {
+export async function markMessageCompleted(messageId: string, db: Firestore): Promise<void> {
+  const ref = db.collection(PROCESSED_MESSAGES_COLLECTION).doc(messageId);
+  await ref.update({ status: "completed", updatedAt: new Date().toISOString() });
+}
+
+export async function markMessageFailed(messageId: string, errorString: string, db: Firestore): Promise<void> {
+  const ref = db.collection(PROCESSED_MESSAGES_COLLECTION).doc(messageId);
+  await ref.update({ status: "failed", lastError: errorString, updatedAt: new Date().toISOString() });
+}
+
+export function todayCivilDate(timestampSeconds: number): string {
   const millis = Number.isFinite(timestampSeconds) ? timestampSeconds * 1000 : Date.now();
-  return new Date(millis).toISOString().slice(0, 10);
+  const d = new Date(millis);
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Fortaleza",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(d); // returns YYYY-MM-DD
 }
 
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+export function formatDate(d: Date): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Fortaleza",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(d);
 }
 
 const LINK_REPLY_MESSAGES: Record<ConsumeLinkCodeResult["status"], string> = {
@@ -317,10 +344,13 @@ export const whatsappWebhook = onRequest(
         linkCodeSecret: WHATSAPP_LINK_CODE_SECRET.value(),
         send: sendWhatsAppTextMessage,
       });
+      await markMessageCompleted(event.message.messageId, db);
     } catch (error) {
+      const errorString = error instanceof Error ? error.message : "unknown";
+      await markMessageFailed(event.message.messageId, errorString, db);
       logger.error("whatsapp.webhook.processing_failed", {
         messageId: event.message.messageId,
-        error: error instanceof Error ? error.message : "unknown",
+        error: errorString,
       });
     }
 
