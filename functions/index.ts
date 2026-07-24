@@ -7,24 +7,15 @@ const db = admin.firestore();
 
 export const processarGastoComIA = functions
   .runWith({ secrets: ["OPENAI_API_KEY"] })
-  .https.onRequest(async (req, res) => {
-    
-    // Evita erro de segurança do navegador (CORS)
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
+  .https.onCall(async (data, context) => {
+    const uid = context.auth?.uid;
+    if (!uid) {
+      throw new functions.https.HttpsError("unauthenticated", "Usuário não autenticado.");
     }
 
-    const textoUsuario = req.body.texto;
-    const userId = req.body.userId;
-
-    if (!textoUsuario || !userId) {
-      res.status(400).json({ error: "Faltou o texto ou o ID do usuário." });
-      return;
+    const textoUsuario = data.texto;
+    if (!textoUsuario || typeof textoUsuario !== "string" || textoUsuario.trim().length === 0 || textoUsuario.length > 500) {
+      throw new functions.https.HttpsError("invalid-argument", "Texto inválido ou muito longo.");
     }
 
     try {
@@ -63,13 +54,12 @@ export const processarGastoComIA = functions
         createdAt: new Date().toISOString()
       };
 
-      await db.collection("users").doc(userId).collection("transactions").add(transacaoPronta);
+      await db.collection("users").doc(uid).collection("transactions").add(transacaoPronta);
 
-      res.status(200).json({ mensagem: "Sucesso", dados: transacaoPronta });
-
+      return { mensagem: "Sucesso", dados: transacaoPronta };
     } catch (error) {
-      console.error("Erro:", error);
-      res.status(500).json({ error: "Erro interno na IA." });
+      console.error("Erro na IA:", error);
+      throw new functions.https.HttpsError("internal", "Erro interno na IA.");
     }
 });
 

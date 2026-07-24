@@ -26,6 +26,8 @@ import { MonthReviewCard } from "@/features/prepare-month/MonthReviewCard";
 import { FinancialPulseWidget } from "@/features/dashboard-smart/FinancialPulseWidget";
 import { RiskAlertsSection } from "@/features/dashboard-smart/RiskAlertsSection";
 import { QuickSimulatorSheet } from "@/features/dashboard-smart/QuickSimulatorSheet";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "@/lib/firebase";
 
 // ==========================================
 // COMPONENTE: INPUT DE CHAT COM IA
@@ -172,14 +174,9 @@ export default function Dashboard() {
   // Chat com IA
   const handleSendMessage = async (text: string) => {
     try {
-      const urlServidorIA = "https://us-central1-emdiafinanceiro-13483.cloudfunctions.net/processarGastoComIA";
-      const resposta = await fetch(urlServidorIA, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto: text, userId: user?.uid }),
-      });
-      const resultado = await resposta.json();
-      if (!resposta.ok) throw new Error(resultado.error || "Erro do servidor");
+      const processarGasto = httpsCallable(functions, "processarGastoComIA");
+      const resposta = await processarGasto({ texto: text });
+      const resultado = resposta.data as any;
       alert(`Cadastrado pela Inteligência Artificial:\n${resultado.dados.description} - R$ ${resultado.dados.amount}`);
     } catch {
       alert("A Inteligência Artificial ainda está inicializando ou indisponível.");

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, useInView, AnimatePresence, type Variants } from "framer-motion";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -51,63 +52,57 @@ const pieData = [
 const steps = [
   {
     num: "01",
-    title: "Mande uma mensagem no WhatsApp",
-    desc: "Cadastre-se uma vez no app e vincule ao WhatsApp. A partir daí, é só mandar uma mensagem. Sem abrir outro app, sem complicação.",
-    tags: ["Cadastro único", "WhatsApp", "IA Lia"],
+    title: "Acompanhe tudo pelo celular",
+    desc: "Acesse nosso painel para ver para onde vai o seu dinheiro todo mês, de forma clara e objetiva.",
+    tags: ["Consultas", "Dashboard", "Por categoria"],
     mockup: [
-      { label: "Você", value: "Quanto gastei em compras esse mês?", color: "text-blue-400", icon: "💬" },
-      { label: "Lia", value: "Você gastou R$ 847 em compras. Sua média é R$ 620. Cuidado, tá acima do normal!", color: "text-[#1AC87E]", icon: "🤖" },
+      { label: "App", value: "Seu limite mensal disponível: R$ 3.200", color: "text-blue-400", icon: "📊" },
     ],
   },
   {
     num: "02",
-    title: "Consulte sua situação em segundos",
-    desc: "Pergunte qualquer coisa: quanto sobrou, quanto pode gastar, como está cada categoria. A Lia responde com os dados reais da sua conta.",
-    tags: ["Consultas", "Tempo real", "Por categoria"],
+    title: "Planeje e mantenha o controle",
+    desc: "Todo início de mês, planeje suas despesas por categoria e evite surpresas.",
+    tags: ["Planejamento mensal", "Controle", "Metas"],
     mockup: [
-      { label: "Você", value: "Posso comprar um celular de R$ 2.000?", color: "text-blue-400", icon: "💬" },
-      { label: "Lia", value: "Sim! Você tem R$ 3.200 disponíveis. Comprando agora, ainda sobram R$ 1.200.", color: "text-[#1AC87E]", icon: "🤖" },
+      { label: "App", value: "📊 Resumo de Junho: Planejou R$ 1.500, gastou R$ 1.780.", color: "text-[#1AC87E]", icon: "🔔" },
     ],
   },
   {
     num: "03",
-    title: "Planeje e seja alertado automaticamente",
-    desc: "Todo início de mês, a Lia monta seu resumo planejado versus realizado. E avisa antes de você extrapolar — no WhatsApp, na hora.",
-    tags: ["Planejamento mensal", "Alertas", "Proatividade"],
+    title: "WhatsApp (Acesso Antecipado)",
+    desc: "Cadastre-se para garantir acesso antecipado à Lia. Em breve, você poderá registrar gastos apenas mandando uma mensagem.",
+    tags: ["Acesso Antecipado", "WhatsApp", "IA Lia"],
     mockup: [
-      { label: "Lia", value: "📊 Resumo de Junho: Planejou R$ 1.500 em alimentação, gastou R$ 1.780. Cuidado!", color: "text-[#1AC87E]", icon: "🔔" },
-      { label: "Lia", value: "💡 Dica: Tenta cozinhar mais em casa essa semana. Você pode economizar R$ 120.", color: "text-[#1AC87E]", icon: "🤖" },
+      { label: "Você", value: "Quanto gastei em compras esse mês?", color: "text-blue-400", icon: "💬" },
+      { label: "Lia", value: "Você gastou R$ 847 em compras. Sua média é R$ 620.", color: "text-[#1AC87E]", icon: "🤖" },
     ],
   },
 ];
 
 const features = [
-  { Icon: MessageCircle, color: "#25D366", title: "Assessoria pelo WhatsApp", desc: "Consulte saldos, gastos por categoria e muito mais — respondendo mensagens como uma amiga que entende de dinheiro." },
-  { Icon: Zap, color: "#1AC87E", title: "Respostas em segundos", desc: "A Lia busca seus dados em tempo real e responde na hora. Sem navegar em menus, sem abrir planilhas." },
-  { Icon: PiggyBank, color: "#3B82F6", title: "Simule antes de comprar", desc: "Mande 'posso comprar X por R$ Y?' e a Lia calcula na hora se cabe no seu orçamento, considerando tudo que você já gastou." },
-  { Icon: TrendingDown, color: "#EF4444", title: "Alertas proativos", desc: "A Lia te avisa antes de você extrapolar. Se suas despesas já superaram o planejado, você fica sabendo na mesma hora." },
+  { Icon: Zap, color: "#1AC87E", title: "Respostas em segundos", desc: "Acesso rápido aos seus dados financeiros através do nosso dashboard otimizado." },
+  { Icon: PiggyBank, color: "#3B82F6", title: "Organize por categorias", desc: "Separe seus gastos para saber exatamente onde você precisa economizar." },
+  { Icon: TrendingDown, color: "#EF4444", title: "Controle de despesas", desc: "Monitore seus gastos para não estourar o orçamento do mês." },
   { Icon: BarChart2, color: "#8B5CF6", title: "Resumo planejado vs. realizado", desc: "Todo mês, compare o que você planejou com o que realmente aconteceu — com breakdown por categoria." },
-  { Icon: ShieldCheck, color: "#10B981", title: "Dados seguros", desc: "Suas informações financeiras ficam criptografadas e nunca são compartilhadas. Segurança bancária no bolso." },
+  { Icon: ShieldCheck, color: "#10B981", title: "Dados seguros", desc: "Suas informações financeiras são armazenadas de forma segura na nuvem." },
+  { Icon: MessageCircle, color: "#25D366", title: "Integração WhatsApp (Em Breve)", desc: "Logo você poderá consultar saldos e gastos por categoria conversando com a Lia no WhatsApp." },
 ];
 
 const testimonials = [
-  { name: "Ana Paula Ferreira", role: "Professora", text: "Finalmente entendi pra onde ia meu dinheiro todo mês! O gráfico de pizza deixa tudo muito claro. Em 2 semanas já consegui guardar R$ 400 que antes sumiam sem eu perceber.", avatar: "AP" },
-  { name: "Carlos Eduardo Santos", role: "Freelancer", text: "Como freelancer minha renda varia muito. O emdia me ajudou a controlar os meses ruins sem desespero. O plano anual valeu cada centavo.", avatar: "CE" },
-  { name: "Mariana Costa", role: "Desenvolvedora", text: "Já tentei 4 apps de finanças antes. Esse é o único que não abandonei depois de uma semana. É simples, bonito e funciona de verdade no celular.", avatar: "MC" },
-  { name: "Rafael Mendonça", role: "Estudante", text: "Uso o plano gratuito e já me ajudou muito. Quando me formar vou assinar o Pro sem pensar duas vezes. O gráfico de categorias é incrível!", avatar: "RM" },
-  { name: "Juliana Rocha", role: "Empresária", text: "Separo as finanças pessoais das do negócio e agora consigo ver exatamente minha saúde financeira individual. A exportação CSV facilita muito.", avatar: "JR" },
-  { name: "Tiago Alves", role: "Motorista", text: "Minha renda é diária e variada. Agora registro tudo pelo celular na hora e no fim do mês já sei exatamente quanto ganhei e gastei. Simples demais!", avatar: "TA" },
+  { name: "Ana Paula Ferreira", role: "Professora (Demonstrativo)", text: "Finalmente entendi pra onde ia meu dinheiro todo mês! O gráfico de pizza deixa tudo muito claro. Em 2 semanas já consegui guardar R$ 400 que antes sumiam sem eu perceber.", avatar: "AP" },
+  { name: "Carlos Eduardo Santos", role: "Freelancer (Demonstrativo)", text: "Como freelancer minha renda varia muito. O emdia me ajudou a controlar os meses ruins sem desespero. O plano anual valeu cada centavo.", avatar: "CE" },
+  { name: "Mariana Costa", role: "Desenvolvedora (Demonstrativo)", text: "Já tentei 4 apps de finanças antes. Esse é o único que não abandonei depois de uma semana. É simples, bonito e funciona de verdade no celular.", avatar: "MC" },
+  { name: "Rafael Mendonça", role: "Estudante (Demonstrativo)", text: "Uso o plano gratuito e já me ajudou muito. Quando me formar vou assinar o Pro sem pensar duas vezes. O gráfico de categorias é incrível!", avatar: "RM" },
+  { name: "Juliana Rocha", role: "Empresária (Demonstrativo)", text: "Separo as finanças pessoais das do negócio e agora consigo ver exatamente minha saúde financeira individual. A exportação CSV facilita muito.", avatar: "JR" },
+  { name: "Tiago Alves", role: "Motorista (Demonstrativo)", text: "Minha renda é diária e variada. Agora registro tudo pelo celular na hora e no fim do mês já sei exatamente quanto ganhei e gastei. Simples demais!", avatar: "TA" },
 ];
 
 const faqs = [
-  { q: "Como a Lia responde no WhatsApp?", a: "Após o cadastro no app, vincule seu número ao WhatsApp. A partir daí, é só mandar uma mensagem e a Lia responde com base nos seus dados financeiros reais." },
-  { q: "Que tipo de pergunta posso fazer?", a: "Você pode perguntar de tudo: 'quanto gastei em alimentação?', 'posso comprar isso?', 'como está meu saldo?', 'estou no vermelho?'. A Lia interpreta e busca a resposta com seus dados reais." },
-  { q: "Preciso instalar o app ou o WhatsApp Business?", a: "Você precisa do app emdia para cadastrar suas transações e vincular ao WhatsApp. Depois disso, toda interação acontece direto no WhatsApp — sem precisar abrir o app." },
+  { q: "A integração com WhatsApp já está funcionando?", a: "Neste momento, a Lia no WhatsApp está em fase de acesso antecipado. Ao se cadastrar, você entra na lista de espera para utilizar essa funcionalidade assim que for liberada." },
   { q: "Posso cancelar a qualquer momento?", a: "Sim, sem burocracia. Se você assinar o plano mensal, pode cancelar quando quiser e continua com acesso até o fim do período pago. No plano anual, oferecemos 7 dias de garantia total." },
-  { q: "Meus dados financeiros ficam seguros?", a: "Com certeza. Os dados são criptografados, ficam salvos na nuvem de forma segura e nunca são compartilhados com terceiros." },
-  { q: "A Lia funciona offline?", a: "A Lia precisa estar online para consultar seus dados em tempo real. Mas você pode registrar transações offline pelo app, e a Lia as considera quando responder sua próxima mensagem." },
-  { q: "Como funciona o resumo mensal?", a: "Todo início de mês, a Lia monta um relatório comparing o que você planejou com o que realmente aconteceu — enviado automaticamente no WhatsApp. Você vê onde acertou e onde pode melhorar." },
-  { q: "Como a Lia sabe quanto eu posso gastar?", a: "A Lia analisa todas as suas receitas e despesas já registradas. Com base nisso, calcula quanto você tem disponível no mês, quanto já gastou por categoria e quanto ainda cabe no orçamento." },
+  { q: "Meus dados financeiros ficam seguros?", a: "Sim. Os dados são salvos na infraestrutura do Firebase (Google) de forma segura e nunca são compartilhados com terceiros para outros fins." },
+  { q: "Como funciona o resumo mensal?", a: "Pelo nosso dashboard, você consegue comparar o que você planejou com o que realmente aconteceu no mês, identificando onde acertou e onde pode melhorar." },
 ];
 
 /* ─── NAVBAR ──────────────────────────────────────────────────────── */
@@ -209,15 +204,15 @@ function Hero() {
 
         <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-lg text-white/75 max-w-xl leading-relaxed">
-          A Lia é sua assessora financeira pessoal. Ela responde no WhatsApp,
-          mostra seu saldo real, alerta antes de você extrapolar — e cabe no bolso.
+          A Lia será sua assessora financeira pessoal no WhatsApp (em breve).
+          Comece organizando pelo App agora e garanta acesso antecipado.
         </motion.p>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <a href={APP_URL}
             className="px-8 py-4 rounded-full bg-[#1AC87E] text-white font-bold text-base hover:bg-[#15a368] transition-all shadow-xl shadow-[#1AC87E]/30 flex items-center gap-2">
-            💬 Começar no WhatsApp
+            Entrar na Lista de Espera
           </a>
           <a href="#como-funciona"
             className="px-8 py-4 rounded-full bg-white/10 text-white font-bold text-base hover:bg-white/20 transition-all border border-white/25">
@@ -289,21 +284,6 @@ function Hero() {
         </motion.div>
       </div>
 
-      {/* Stats bar */}
-      <div ref={statsRef} className="relative bg-white py-10 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 grid grid-cols-3 gap-4 text-center">
-          {[
-            { value: `${users >= 10000 ? "10k" : users}+`, label: "Usuários assessorados" },
-            { value: `R$ ${money}M+`, label: "Gerenciados via WhatsApp" },
-            { value: `${satisfaction}%`, label: "Satisfação" },
-          ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1 }}>
-              <div className="text-3xl sm:text-4xl font-extrabold text-[#0A0F1E]">{s.value}</div>
-              <div className="text-sm text-gray-500 mt-1 font-medium">{s.label}</div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
@@ -519,7 +499,6 @@ function DemoChart() {
 
 /* ─── PRICING ─────────────────────────────────────────────────────── */
 function Pricing() {
-  const [annual, setAnnual] = useState(true);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -534,13 +513,13 @@ function Pricing() {
       ctaStyle: "border border-[#1AC87E] text-[#1AC87E] hover:bg-[#1AC87E]/5",
     },
     {
-      tier: "PRO",
-      name: annual ? "R$ 78,99" : "R$ 9,99",
-      period: annual ? "/ano" : "/mês",
-      sub: annual ? `Equivale a R$ 6,58/mês — você economiza R$ 40,89!` : "cobrado mensalmente",
+      tier: "FUNDADOR",
+      name: "R$ 9,99",
+      period: "/ano",
+      sub: "Oferta exclusiva de lançamento",
       popular: true,
-      features: ["Transações ilimitadas", "Histórico financeiro completo", "Exportação CSV", "IA Financeira — Lia", "Alertas de vencimento", "Suporte prioritário", "7 dias de garantia"],
-      cta: annual ? "Assinar Plano Anual" : "Assinar Mensal",
+      features: ["Transações ilimitadas", "Histórico financeiro completo", "Exportação CSV", "Acesso Antecipado à Lia", "Alertas de vencimento", "Suporte prioritário", "7 dias de garantia"],
+      cta: "Assinar Plano Fundador",
       ctaStyle: "bg-[#1AC87E] text-white hover:bg-[#15a368] shadow-lg shadow-[#1AC87E]/30",
     },
     {
@@ -548,7 +527,7 @@ function Pricing() {
       name: "Custom",
       sub: "Preço sob consulta",
       popular: false,
-      features: ["Tudo do Pro", "Múltiplos usuários", "Dashboard corporativo", "Integração contábil", "SLA garantido", "Gerente dedicado"],
+      features: ["Tudo do Fundador", "Múltiplos usuários", "Dashboard corporativo", "Integração contábil", "SLA garantido", "Gerente dedicado"],
       cta: "Falar com a equipe",
       ctaStyle: "border border-gray-300 text-gray-700 hover:border-[#1AC87E] hover:text-[#1AC87E]",
     },
@@ -561,18 +540,6 @@ function Pricing() {
           <motion.p variants={fadeUp} className="text-[#1AC87E] font-bold text-sm uppercase tracking-widest mb-3">Planos & Preços</motion.p>
           <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-[#0A0F1E]">Simples assim. Sem surpresas.</motion.h2>
           <motion.p variants={fadeUp} className="mt-4 text-gray-500 text-lg">Comece grátis e faça upgrade quando quiser ter controle total das suas finanças.</motion.p>
-
-          <motion.div variants={fadeUp} className="mt-8 inline-flex items-center gap-1 p-1 bg-gray-100 rounded-2xl">
-            <button onClick={() => setAnnual(false)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${!annual ? "bg-white text-[#0A0F1E] shadow" : "text-gray-500"}`}>
-              Mensal
-            </button>
-            <button onClick={() => setAnnual(true)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${annual ? "bg-[#0A0F1E] text-white shadow" : "text-gray-500"}`}>
-              Anual
-              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${annual ? "bg-[#1AC87E] text-white" : "bg-[#1AC87E]/15 text-[#1AC87E]"}`}>-34%</span>
-            </button>
-          </motion.div>
         </motion.div>
 
         <motion.div variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"} className="grid md:grid-cols-3 gap-6 items-center">
@@ -871,9 +838,10 @@ function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Empresa</h4>
             <ul className="space-y-2">
-              {["Sobre nós", "Blog", "Privacidade", "Termos"].map((l) => (
-                <li key={l}><a href="#" className="text-white/40 text-sm hover:text-[#1AC87E] transition-colors">{l}</a></li>
-              ))}
+              <li key="Sobre"><a href="#" className="text-white/40 text-sm hover:text-[#1AC87E] transition-colors">Sobre nós</a></li>
+              <li key="Blog"><a href="#" className="text-white/40 text-sm hover:text-[#1AC87E] transition-colors">Blog</a></li>
+              <li key="Privacidade"><Link to="/privacidade" className="text-white/40 text-sm hover:text-[#1AC87E] transition-colors">Privacidade</Link></li>
+              <li key="Termos"><Link to="/termos" className="text-white/40 text-sm hover:text-[#1AC87E] transition-colors">Termos</Link></li>
             </ul>
           </div>
           <div>
