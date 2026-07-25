@@ -124,10 +124,32 @@ test("markMessageProcessed", async (t) => {
     assert.strictEqual(await markMessageProcessed("wamid.dedup2", db), false);
   });
 
-  await t.test("3. se falhou antes, permite nova tentativa", async () => {
+  await t.test("3. se está failed, permite nova tentativa", async () => {
     await markMessageProcessed("wamid.dedup3", db);
-    await markMessageFailed("wamid.dedup3", "error", db);
+    await markMessageFailed("wamid.dedup3", "INTERNAL_ERROR", db);
     assert.strictEqual(await markMessageProcessed("wamid.dedup3", db), true);
+  });
+
+  await t.test("3b. se está failed e atingiu o limite de tentativas (3), retorna false", async () => {
+    await markMessageProcessed("wamid.dedup3b", db); // attempt 1
+    await markMessageFailed("wamid.dedup3b", "ERROR", db);
+    await markMessageProcessed("wamid.dedup3b", db); // attempt 2
+    await markMessageFailed("wamid.dedup3b", "ERROR", db);
+    await markMessageProcessed("wamid.dedup3b", db); // attempt 3
+    await markMessageFailed("wamid.dedup3b", "ERROR", db);
+    
+    assert.strictEqual(await markMessageProcessed("wamid.dedup3b", db), false); // attempt 4 fails
+  });
+
+  await t.test("3c. se está processing mas timeout de 1 minuto expirou, retoma o processamento", async () => {
+    await markMessageProcessed("wamid.dedup3c", db);
+    
+    // Simulate abandoned processing by forcing updatedAt 2 minutes in the past
+    const ref = db.collection("whatsappProcessedMessages").doc("wamid.dedup3c");
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    await ref.update({ updatedAt: twoMinutesAgo });
+    
+    assert.strictEqual(await markMessageProcessed("wamid.dedup3c", db), true);
   });
 
   await t.test("4. se está completed, retorna false", async () => {
@@ -199,25 +221,55 @@ test("routeMessage", async (t) => {
 
   await t.test("4. responder SIM registra a transação com o schema real e limpa o pendente", async () => {
     await db.collection("whatsappLinks").doc("5511000000104").set({ uid: "user-104", linkedAt: new Date().toISOString() });
-    const first = createSendSpy();
+    await db.collection("whatsappPendingCommands").doc("5511000000104").set({
+      uid: "user-104",
+      waId: "5511000000104",
+      type: "expense",
+      amountInCents: 3800,
+      description: "mercado",
+      categorySuggestion: "Alimentação",
+      occurredOn: "2024-05-22",
+      sourceMessageId: "m_prev",
+      createdAt: new Date().toISOString(),
+    });
+    const { send, calls } = createSendSpy();
     await routeMessage(
-      { messageId: "m4a", waId: "5511000000104", text: "Gastei 38 no mercado", timestampSeconds: nowSeconds() },
-      deps(first.send)
+      { messageId: "m4", waId: "5511000000104", text: "SIM", timestampSeconds: nowSeconds() },
+      deps(send)
     );
 
-    const second = createSendSpy();
-    await routeMessage({ messageId: "m4b", waId: "5511000000104", text: "SIM", timestampSeconds: nowSeconds() }, deps(second.send));
-
-    assert.match(second.calls[0].body, /Registrado/i);
-    const txSnap = await db.collection("users").doc("user-104").collection("transactions").get();
-    assert.strictEqual(txSnap.size, 1);
-    const tx = txSnap.docs[0].data();
-    assert.strictEqual(tx.amount, 38);
-    assert.strictEqual(tx.type, "expense");
-    assert.ok(["amount", "type", "category", "description", "date", "createdAt"].every((key) => key in tx));
+    assert.strictEqual(calls.length, 1);
+    assert.match(calls[0].body, /Registrado!/i);
 
     const pendingSnap = await db.collection("whatsappPendingCommands").doc("5511000000104").get();
     assert.strictEqual(pendingSnap.exists, false);
+
+    const txSnap = await db.collection("users").doc("user-104").collection("transactions").get();
+    assert.strictEqual(txSnap.docs.length, 1);
+    const tx = txSnap.docs[0].data();
+    assert.strictEqual(tx.amount, 38);
+    assert.strictEqual(tx.type, "expense");
+    assert.strictEqual(tx.description, "mercado");
+    assert.strictEqual(tx.date, "2024-05-22");
+  });
+
+  await t.test("4b. falha no envio da resposta sem duplicar transação financeira (retentativa de SIM)", async () => {
+    // Se o send falhar na primeira vez, o comando pendente foi deletado e a transação gravada
+    // Quando a Meta retentar (mesma mensagem SIM, mas tratada como nova), o `routeMessage`
+    // não encontrará o comando pendente (retorna `handleNewTransactionMessage` pois falha em `getPendingCommand`),
+    // o que significa que enviará "Não entendi" porque SIM não é uma transação nova válida.
+    await db.collection("whatsappLinks").doc("5511000000104b").set({ uid: "user-104b", linkedAt: new Date().toISOString() });
+    
+    const { send, calls } = createSendSpy();
+    await routeMessage(
+      { messageId: "m4b", waId: "5511000000104b", text: "SIM", timestampSeconds: nowSeconds() },
+      deps(send)
+    );
+    assert.strictEqual(calls.length, 1);
+    assert.match(calls[0].body, /Não entendi/i);
+    
+    const txSnap = await db.collection("users").doc("user-104b").collection("transactions").get();
+    assert.strictEqual(txSnap.docs.length, 0, "Não deve ter criado a transação");
   });
 
   await t.test("5. responder NÃO descarta o pendente sem gravar transação", async () => {

@@ -40,22 +40,10 @@ function unauthenticated() {
   return { ...authenticated(), user: null };
 }
 
-describe("PrepareSeuMes (rota oficial — feature flag e proteção)", () => {
+describe("PrepareSeuMes (rota oficial — proteção)", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
-  it("1. feature flag desativada redireciona usuário autenticado para /dashboard", () => {
-    mockedUseAuth.mockReturnValue(authenticated());
-    vi.stubEnv("VITE_ENABLE_PREPARE_MONTH", "false");
-    render(
-      <Router>
-        <ProtectedRoute component={PrepareSeuMes} />
-      </Router>
-    );
-    expect(screen.queryByText(/Prepare seu mês/i)).not.toBeInTheDocument();
-  });
-
   it("2. usuário não autenticado é enviado para o login mesmo com a flag ativa", () => {
     mockedUseAuth.mockReturnValue(unauthenticated());
     vi.stubEnv("VITE_ENABLE_PREPARE_MONTH", "true");

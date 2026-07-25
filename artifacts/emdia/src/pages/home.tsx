@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { motion, useInView, AnimatePresence, type Variants } from "framer-motion";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -101,7 +101,7 @@ const testimonials = [
 const faqs = [
   { q: "A integração com WhatsApp já está funcionando?", a: "Neste momento, a Lia no WhatsApp está em fase de acesso antecipado. Ao se cadastrar, você entra na lista de espera para utilizar essa funcionalidade assim que for liberada." },
   { q: "Posso cancelar a qualquer momento?", a: "Sim, sem burocracia. Se você assinar o plano mensal, pode cancelar quando quiser e continua com acesso até o fim do período pago. No plano anual, oferecemos 7 dias de garantia total." },
-  { q: "Meus dados financeiros ficam seguros?", a: "Sim. Os dados são salvos na infraestrutura do Firebase (Google) de forma segura e nunca são compartilhados com terceiros para outros fins." },
+  { q: "Meus dados financeiros ficam seguros?", a: "Sim. Os dados são salvos na infraestrutura do Firebase (Google) de forma segura. O compartilhamento de dados ocorre apenas com fornecedores necessários para a operação do sistema, conforme detalhado em nossa Política de Privacidade." },
   { q: "Como funciona o resumo mensal?", a: "Pelo nosso dashboard, você consegue comparar o que você planejou com o que realmente aconteceu no mês, identificando onde acertou e onde pode melhorar." },
 ];
 

@@ -68,21 +68,50 @@ export function extractInboundEvent(body: unknown): WebhookInboundEvent {
   }
 }
 
+const MAX_ATTEMPTS = 3;
+const PROCESSING_TIMEOUT_MS = 60 * 1000; // 1 minute lease
+
 /** Atomic create-if-absent dedup guard, keyed by Meta's own messageId. */
 export async function markMessageProcessed(messageId: string, db: Firestore): Promise<boolean> {
   const ref = db.collection(PROCESSED_MESSAGES_COLLECTION).doc(messageId);
   return db.runTransaction(async (t) => {
     const doc = await t.get(ref);
+    const now = Date.now();
+    const expiresAt = new Date(now + 7 * 24 * 60 * 60 * 1000);
+
     if (doc.exists) {
-      const state = doc.data()?.status;
-      if (state === "completed" || state === "processing") return false;
+      const data = doc.data() || {};
+      const state = data.status;
+      const attempts = data.attempts || 0;
+      
+      if (state === "completed") return false;
+      
+      if (state === "processing") {
+        const updatedAt = new Date(data.updatedAt || now).getTime();
+        const isAbandoned = (now - updatedAt) > PROCESSING_TIMEOUT_MS;
+        if (!isAbandoned) {
+          return false; // Still processing normally
+        }
+      }
+
+      if (attempts >= MAX_ATTEMPTS) {
+        // Exceeded retry limit
+        return false;
+      }
+
+      t.update(ref, {
+        status: "processing",
+        updatedAt: new Date(now).toISOString(),
+        attempts: attempts + 1
+      });
+      return true;
     }
-    // Expira em 7 dias
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
     t.set(ref, { 
       status: "processing", 
-      updatedAt: new Date().toISOString(), 
-      expiresAt 
+      updatedAt: new Date(now).toISOString(), 
+      expiresAt,
+      attempts: 1
     });
     return true;
   });
@@ -93,9 +122,9 @@ export async function markMessageCompleted(messageId: string, db: Firestore): Pr
   await ref.update({ status: "completed", updatedAt: new Date().toISOString() });
 }
 
-export async function markMessageFailed(messageId: string, errorString: string, db: Firestore): Promise<void> {
+export async function markMessageFailed(messageId: string, errorCode: string, db: Firestore): Promise<void> {
   const ref = db.collection(PROCESSED_MESSAGES_COLLECTION).doc(messageId);
-  await ref.update({ status: "failed", lastError: errorString, updatedAt: new Date().toISOString() });
+  await ref.update({ status: "failed", lastError: errorCode, updatedAt: new Date().toISOString() });
 }
 
 export function todayCivilDate(timestampSeconds: number): string {
@@ -346,11 +375,11 @@ export const whatsappWebhook = onRequest(
       });
       await markMessageCompleted(event.message.messageId, db);
     } catch (error) {
-      const errorString = error instanceof Error ? error.message : "unknown";
-      await markMessageFailed(event.message.messageId, errorString, db);
+      const errorCode = error instanceof Error && error.message.includes("TIMEOUT") ? "TIMEOUT" : "INTERNAL_ERROR";
+      await markMessageFailed(event.message.messageId, errorCode, db);
       logger.error("whatsapp.webhook.processing_failed", {
         messageId: event.message.messageId,
-        error: errorString,
+        errorCode,
       });
     }
 
