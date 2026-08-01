@@ -1,23 +1,28 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { UserPlanProvider } from "@/lib/useUserPlan";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+// Home is the landing page and the most common entry point — kept eager so
+// it renders in the same chunk as the shell, with no lazy-load flash.
 import Home from "@/pages/home";
-import Login from "@/pages/login";
-import Cadastro from "@/pages/cadastro";
-import Dashboard from "@/pages/dashboard";
-import Transacoes from "@/pages/transacoes";
-import Upgrade from "@/pages/upgrade";
-import NotFound from "@/pages/not-found";
-import TodayPreview from "@/pages/today-preview";
-import PrepareSeuMes from "@/pages/prepare-seu-mes";
-import PrepareMonthPreview from "@/pages/prepare-month-preview";
-import WhatsAppPreview from "@/pages/whatsapp-preview";
-import Planos from "@/pages/planos";
-import { PrivacyPage } from "@/pages/privacy";
-import { TermsPage } from "@/pages/terms";
+// Every other route is code-split: each is only downloaded when visited,
+// keeping the initial bundle within the web performance budget.
+const Login = lazy(() => import("@/pages/login"));
+const Cadastro = lazy(() => import("@/pages/cadastro"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Transacoes = lazy(() => import("@/pages/transacoes"));
+const Upgrade = lazy(() => import("@/pages/upgrade"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const TodayPreview = lazy(() => import("@/pages/today-preview"));
+const PrepareSeuMes = lazy(() => import("@/pages/prepare-seu-mes"));
+const PrepareMonthPreview = lazy(() => import("@/pages/prepare-month-preview"));
+const WhatsAppPreview = lazy(() => import("@/pages/whatsapp-preview"));
+const Planos = lazy(() => import("@/pages/planos"));
+const PrivacyPage = lazy(() => import("@/pages/privacy").then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("@/pages/terms").then((m) => ({ default: m.TermsPage })));
 
 export function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
@@ -86,7 +91,9 @@ export default function App() {
         <AuthProvider>
           <UserPlanProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
+              <Suspense fallback={<LoadingSpinner />}>
+                <Router />
+              </Suspense>
             </WouterRouter>
           </UserPlanProvider>
         </AuthProvider>
