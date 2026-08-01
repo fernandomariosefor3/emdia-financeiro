@@ -14,7 +14,6 @@ import {
 import { FinancialTimeline } from "./FinancialTimeline";
 import { DecisionSimulator } from "./DecisionSimulator";
 import { ExplainCalculationDialog } from "./ExplainCalculationDialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2, CalendarClock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -194,18 +193,6 @@ export function TodayDashboardPrototype() {
           referenceDate={referenceDate}
           horizonDate={horizonDate}
         />
-      </div>
-
-      <div className="mt-8">
-        <div className="relative">
-          <Input
-            className="w-full pl-4 pr-12 py-6 rounded-2xl bg-muted/50 border-muted focus-visible:ring-primary shadow-sm text-base"
-            placeholder="Pergunte ou registre algo... “Posso gastar R$ 300 em roupas?”"
-          />
-          <div className="absolute right-3 top-3 bg-primary text-primary-foreground p-1.5 rounded-xl cursor-pointer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-          </div>
-        </div>
       </div>
 
       <ExplainCalculationDialog
