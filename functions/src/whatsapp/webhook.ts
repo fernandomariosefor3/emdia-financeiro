@@ -31,7 +31,6 @@ import {
 
 const PROCESSED_MESSAGES_COLLECTION = "whatsappProcessedMessages";
 const LINK_COMMAND_PATTERN = /^vincular\s+(\d{6})$/i;
-const FIRESTORE_ALREADY_EXISTS_CODE = 6;
 
 /**
  * Reads only the shape we need from Meta's webhook payload. Never returns
