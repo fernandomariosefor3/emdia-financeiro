@@ -24,7 +24,7 @@ interface UserPlanContextType {
 const UserPlanContext = createContext<UserPlanContextType | null>(null);
 
 export function UserPlanProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [userPlan, setUserPlan] = useState<UserPlan>({
     plan: "free",
     isPro: false,
@@ -56,29 +56,25 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
         // Busca dados do usuário no Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const userPlanType: PlanType = userData.plan || "free";
-          const isPro = userPlanType === "pro";
-          const isEnterprise = userPlanType === "enterprise";
-          const transactionsThisMonth = userData.transactionsThisMonth || 0;
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const userPlanType: PlanType = userData.plan || "free";
+        const transactionsThisMonth = userData.transactionsThisMonth || 0;
 
-          // Determina features baseado no plano
-          let features = FREE_LIMITS;
-          if (isPro || isEnterprise) {
-            features = PRO_FEATURES;
-          }
+        // O admin (dono do produto, definido por VITE_ADMIN_EMAIL) recebe
+        // acesso Pro completo sem cobrança — para uso pessoal e validação.
+        const isEnterprise = userPlanType === "enterprise";
+        const isPro = isAdmin || userPlanType === "pro";
+        const hasFullAccess = isPro || isEnterprise;
 
-          setUserPlan({
-            plan: userPlanType,
-            isPro,
-            isEnterprise,
-            features,
-            transactionsUsed: transactionsThisMonth,
-            transactionsLimit: isPro || isEnterprise ? -1 : FREE_LIMITS.transactionsPerMonth,
-            isUnlimited: isPro || isEnterprise,
-          });
-        }
+        setUserPlan({
+          plan: isAdmin && userPlanType === "free" ? "pro" : userPlanType,
+          isPro,
+          isEnterprise,
+          features: hasFullAccess ? PRO_FEATURES : FREE_LIMITS,
+          transactionsUsed: transactionsThisMonth,
+          transactionsLimit: hasFullAccess ? -1 : FREE_LIMITS.transactionsPerMonth,
+          isUnlimited: hasFullAccess,
+        });
       } catch (error) {
         console.error("Erro ao carregar plano do usuário:", error);
       } finally {
@@ -87,7 +83,7 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
     }
 
     loadUserPlan();
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Verifica se uma feature está habilitada
   const isFeatureEnabled = (feature: keyof typeof FREE_LIMITS): boolean => {
