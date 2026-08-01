@@ -151,6 +151,16 @@ jobs:
           # /planos stays informational (no Checkout) until Stripe is
           # configured, see docs/FOUNDER-ANNUAL-PLAN.md.
           VITE_ENABLE_PREPARE_MONTH: "true"
+          # Today screen (decision engine) is now merged into /dashboard;
+          # without this flag it silently doesn't render.
+          VITE_ENABLE_TODAY_V3: "true"
+          # Reads the confirmed monthly context + real transactions from
+          # Firestore instead of the demo fixtures.
+          VITE_TODAY_DATA_SOURCE: "firebase"
+          # Grants the product owner's account unlimited Pro access without
+          # billing (see src/lib/useUserPlan.tsx) — bundled into the client
+          # JS either way, so no different than a secret here.
+          VITE_ADMIN_EMAIL: "fernandomariodasmartins@gmail.com"
 
       - name: Check bundle size
         run: |
