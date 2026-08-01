@@ -1,6 +1,8 @@
-# emdia — Controle Financeiro Pessoal
+# emdia — Sua Assessora Financeira no WhatsApp
 
-Plataforma moderna de gestão financeira pessoal desenvolvida com React, TypeScript e Firebase.
+emdia ajuda brasileiros a controlarem as finanças sem planilha. A proposta central é uma assessora financeira via WhatsApp, apoiada por um app web com um motor de decisão que responde à pergunta que importa: **"posso gastar isso hoje?"**.
+
+> **Status do WhatsApp:** a integração está desenvolvida e testada, mas a ativação depende do número oficial e das credenciais da Meta (ver `docs/RELATORIO-MELHORIAS-EMDIA.md`). O app web já está funcional.
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
@@ -30,14 +32,15 @@ Plataforma moderna de gestão financeira pessoal desenvolvida com React, TypeScr
 
 ## Funcionalidades
 
-- **Dashboard Financeiro** — Visualize suas receitas, despesas e dívidas em tempo real
-- **Gestão de Transações** — Registro rápido de entradas e saídas com limite por plano
-- **Gráficos Interativos** — Gráficos de pizza e barras para análise visual
-- **Autenticação Segura** — Login com Firebase Auth (email/senha)
-- **Exportação CSV** — Exporte seus dados para declaração de IR (plano Pro)
-- **Relatórios Premium** — Análise por mês, trimestre e ano (plano Pro)
-- **Responsivo** — Funciona perfeitamente em desktop e mobile
-- **PWA** — Instale como app no seu celular
+- **Tela Hoje (motor de decisão)** — Calcula seu "respiro" (quanto sobra com segurança), ritmo diário seguro, riscos próximos e uma ação recomendada, tudo em centavos para evitar erros de arredondamento. É a experiência principal do dashboard.
+- **Preparar seu Mês** — Assistente que confirma saldo de referência, reserva mínima, rendas esperadas, contas recorrentes e metas protegidas, alimentando o motor de decisão com dados reais.
+- **Simulador de Compra** — "Posso gastar R$ X?" com impacto projetado no respiro e nos compromissos essenciais.
+- **Dashboard Financeiro** — Receitas, despesas, gráficos (pizza/barras), insights de categoria e comparação mês a mês.
+- **Registro por IA** — Cadastre um gasto em linguagem natural (Firebase Functions + OpenAI).
+- **Assessora no WhatsApp** *(em ativação)* — Consultas de saldo/gastos e simulação por mensagem, com webhook idempotente.
+- **Autenticação Segura** — Login com Firebase Auth (email/senha).
+- **Exportação CSV / Relatórios Premium** — Recursos do plano Pro.
+- **Responsivo & PWA** — Funciona em desktop e mobile; instalável como app.
 
 ## Tecnologias
 
@@ -53,6 +56,7 @@ Plataforma moderna de gestão financeira pessoal desenvolvida com React, TypeScr
 ### Backend
 - **Firebase Auth** — Autenticação
 - **Cloud Firestore** — Banco de dados NoSQL
+- **Firebase Functions** — Registro por IA (OpenAI), billing (Stripe) e webhook do WhatsApp (Meta)
 - **Firebase Hosting** — Hospedagem CDN global
 
 ### DevOps
@@ -187,13 +191,20 @@ firebase deploy
 
 ## Roadmap
 
+**Curto prazo (go-live)**
+- [ ] Ativar WhatsApp: número oficial + credenciais Meta e deploy das Functions
+- [ ] Ativar billing Stripe (plano Founder) em produção
+- [ ] Atualizar runtime das Firebase Functions (Node 20 → 22)
+
+**Concluído recentemente**
+- [x] Tela Hoje conectada ao contexto financeiro confirmado (motor de decisão)
+- [x] "Preparar seu Mês" (GA)
+
+**Futuro**
 - [ ] Autenticação em 2 fatores (2FA)
-- [ ] Dashboard de investimentos
 - [ ] Integração com Open Banking (PIX)
 - [ ] App nativo iOS/Android
-- [ ] Relatórios mensais automatizados
 - [ ] Previsão de gastos com ML
-- [ ] Gamificação
 
 ## Suporte
 
