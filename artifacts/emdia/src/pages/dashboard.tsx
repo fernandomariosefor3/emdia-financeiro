@@ -26,8 +26,11 @@ import { MonthReviewCard } from "@/features/prepare-month/MonthReviewCard";
 import { FinancialPulseWidget } from "@/features/dashboard-smart/FinancialPulseWidget";
 import { RiskAlertsSection } from "@/features/dashboard-smart/RiskAlertsSection";
 import { QuickSimulatorSheet } from "@/features/dashboard-smart/QuickSimulatorSheet";
+import { TodayDashboardPrototype } from "@/features/today";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
+
+const isTodayV3Enabled = import.meta.env.VITE_ENABLE_TODAY_V3 === "true";
 
 // ==========================================
 // COMPONENTE: INPUT DE CHAT COM IA
@@ -331,6 +334,23 @@ export default function Dashboard() {
       {/* Main content */}
       <div className="flex-1 lg:ml-60 pt-16 lg:pt-0">
         <main className="max-w-5xl mx-auto px-5 py-7 space-y-7 w-full">
+          {/* Today V3 — experiência principal de decisão (motor financeiro) */}
+          {isTodayV3Enabled && (
+            <section aria-label="Resumo do seu dia">
+              <TodayDashboardPrototype />
+            </section>
+          )}
+
+          {isTodayV3Enabled && (
+            <div className="flex items-center gap-3 pt-4">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                Gráficos e histórico
+              </span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+          )}
+
           {/* Greeting */}
           <div>
             <h1 className="text-2xl font-extrabold text-[#0A0F1E]">
