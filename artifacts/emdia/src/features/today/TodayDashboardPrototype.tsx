@@ -15,10 +15,15 @@ import { FinancialTimeline } from "./FinancialTimeline";
 import { DecisionSimulator } from "./DecisionSimulator";
 import { ExplainCalculationDialog } from "./ExplainCalculationDialog";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, CalendarClock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "wouter";
 import { useTodayFinancialData } from "./data/useTodayFinancialData";
 import { format } from "date-fns";
+
+/** Marker emitted by the data layer when no confirmed monthly context exists. */
+const PREPARE_MONTH_HINT = "Prepare seu mês";
 
 export function TodayDashboardPrototype() {
   const [explainOpen, setExplainOpen] = useState(false);
@@ -112,6 +117,9 @@ export function TodayDashboardPrototype() {
   const primaryRisk = risks.length > 0 ? risks[0] : null;
   const recommendedAction = buildRecommendedAction(snapshot, risks);
   const isPartial = financialResult.quality === "partial" || financialResult.quality === "insufficient";
+  const needsPrepareMonth = financialResult.diagnostics.assumptions.some((a) =>
+    a.includes(PREPARE_MONTH_HINT)
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 lg:p-8 space-y-8 animate-in fade-in duration-500">
@@ -133,7 +141,21 @@ export function TodayDashboardPrototype() {
             <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertTitle className="text-blue-800 font-semibold">Estimativa Parcial</AlertTitle>
             <AlertDescription className="text-blue-700/90 text-sm mt-1">
-              Este resultado considera somente as movimentações registradas no Emdia. Sua reserva mínima e seu saldo bancário real ainda não estão configurados.
+              {needsPrepareMonth ? (
+                <div className="space-y-3">
+                  <p>
+                    Este resultado considera somente as movimentações registradas no Emdia. Prepare seu mês para incluir seu saldo de referência, reserva mínima e metas — assim os cálculos ficam muito mais precisos.
+                  </p>
+                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Link href="/prepare-seu-mes">
+                      <CalendarClock className="h-4 w-4 mr-1.5" />
+                      Preparar meu mês
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                "Este resultado considera somente as movimentações registradas no Emdia. Sua reserva mínima e seu saldo bancário real ainda não estão configurados."
+              )}
             </AlertDescription>
           </Alert>
         )}

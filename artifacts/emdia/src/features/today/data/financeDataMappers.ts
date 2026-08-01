@@ -35,10 +35,14 @@ function safeParseAmount(amount: unknown): MoneyInCents | null {
 }
 
 function safeParseDate(date: unknown): string | null {
-  if (typeof date !== "string") return null;
+  if (typeof date !== "string" || date.length < 10) return null;
+  // Legacy transactions may store a full ISO datetime (e.g.
+  // "2026-07-20T16:43:00.000Z"); normalize to a civil date before validating
+  // so historical data is not silently dropped as invalid.
+  const civil = date.slice(0, 10);
   try {
-    validateDate(date);
-    return date;
+    validateDate(civil);
+    return civil;
   } catch (error) {
     return null;
   }
