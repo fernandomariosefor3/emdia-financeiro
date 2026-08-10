@@ -20,6 +20,7 @@ const TodayPreview = lazy(() => import("@/pages/today-preview"));
 const PrepareSeuMes = lazy(() => import("@/pages/prepare-seu-mes"));
 const PrepareMonthPreview = lazy(() => import("@/pages/prepare-month-preview"));
 const WhatsAppPreview = lazy(() => import("@/pages/whatsapp-preview"));
+const TelegramPreview = lazy(() => import("@/pages/telegram-preview"));
 const Planos = lazy(() => import("@/pages/planos"));
 const PrivacyPage = lazy(() => import("@/pages/privacy").then((m) => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import("@/pages/terms").then((m) => ({ default: m.TermsPage })));
@@ -75,6 +76,9 @@ function Router() {
       </Route>
       <Route path="/whatsapp-preview">
         <ProtectedRoute component={WhatsAppPreview} />
+      </Route>
+      <Route path="/telegram-preview">
+        <ProtectedRoute component={TelegramPreview} />
       </Route>
       <Route path="/planos" component={Planos} />
       <Route path="/privacidade" component={PrivacyPage} />
